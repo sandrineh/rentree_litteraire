@@ -37,7 +37,7 @@ df_rl_total_test = pd.read_pickle("./liste_rl_total_test.pkl") #/content/drive/M
 
 st.sidebar.success("Select a demo above.")
 
-st.dataframe(df_rl_total_test.tail(2))
+st.dataframe(df_rl_total_test.tail())
 
 
 # 1. Find a book by the Editor name "Emmanuelle"
@@ -51,6 +51,7 @@ st.dataframe(find_editeur)
     # url à scraper
 with st.form("ajout auto"):
 	url_titre = st.text_input('url')
+	rl = st.selectbox("RENTREE LITTERAIRE", ['RL', ''])
 	premier_roman = st.selectbox('PREMIER ROMAN', ['OUI', 'NON'])
 	types_livre = st.selectbox("type livre", ['Romans français' , 'Essais', 'Romans étrangers'])
 	genre = st.selectbox('genre', ['F', 'M'])
@@ -133,7 +134,7 @@ if submit_utl :
 		#'caracteristiques_bis' : temp_dict,
 		'couverture':data_livre_couv,
 		'caracteristiques':data_livre_carac,
-		'RL' : 'RL',
+		'RL' : rl,
 		'PREMIER_ROMAN' : premier_roman,
 		'TYPES' : types_livre,
 		'GENRE' : genre,
@@ -159,7 +160,7 @@ if submit_utl :
 	df_rl_total_test = pd.concat([df_rl_total_test,pd.DataFrame(liste_rl_titre, index=[int(nb_index)])])
 
 # export au format pickle
-df_rl_total_test.to_pickle("./liste_rl_total_test.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
+df_rl_total_test[1348:].to_pickle("./liste_rl_total_test_pour_prix_litt.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
 
 df_rl_total_test = pd.read_pickle("./liste_rl_total_test.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
-st.dataframe(df_rl_total_test.tail(2))
+st.dataframe(df_rl_total_test.tail(60))
