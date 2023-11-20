@@ -106,7 +106,7 @@ with col_result_find_author :
 	if add_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].setdefault( index_pl, add_to_dict)
 
-	#st.session_state['dico'][402]["livre"]["prix_litteraire"][0]['lauréat'] = 'NON'
+	st.session_state['dico'][362]["livre"]["prix_litteraire"][1]['deuxieme_selection'] = 'NON'
 	#st.session_state['dico'][316]["livre"]["prix_litteraire"].pop(2)
 	with open('./dict_rl_23.pkl', 'wb') as fp:
 		pickle.dump(st.session_state['dico'], fp)
