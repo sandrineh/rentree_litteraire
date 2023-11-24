@@ -103,13 +103,17 @@ with col_result_find_author :
 	
 	add_price = st.button('add a price')
 	replace_price = st.button('modif a price')
+	delete_price = st.button('delete a price')
 
 	if add_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].setdefault( index_pl, add_to_dict)
 	elif replace_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl] = add_to_dict
 		
-		st.write(st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl])
+	if delete_price : 
+		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].pop(index_pl)
+	
+	st.write(st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl])
 
 	#st.session_state['dico'][158]["livre"]["prix_litteraire"][1]['lauréat'] = 'OUI'
 	#st.session_state['dico'][316]["livre"]["prix_litteraire"].pop(2)
