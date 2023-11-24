@@ -160,7 +160,11 @@ if submit_utl :
 	df_rl_total_test = pd.concat([df_rl_total_test,pd.DataFrame(liste_rl_titre, index=[int(nb_index)])])
 
 # export au format pickle
-df_rl_total_test[1348:].to_pickle("./liste_rl_total_test_pour_prix_litt.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
+df_rl_total_test[1347:].to_pickle("./liste_rl_total_test_pour_prix_litt.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
 
 df_rl_total_test = pd.read_pickle("./liste_rl_total_test.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
 st.dataframe(df_rl_total_test.tail(60))
+
+
+pour_pl_df =  pd.read_pickle("./liste_rl_total_test_pour_prix_litt.pkl")
+st.dataframe(pour_pl_df.tail(60))

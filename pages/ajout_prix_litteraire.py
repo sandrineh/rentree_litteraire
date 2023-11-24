@@ -39,7 +39,7 @@ st.header("RL_2023 - Ajout Prix Littéraire")
 #    dico_rl_pl = pd.read_pickle(dico)
 #    return dico_rl_pl
 
-dico_rl_pl_23 = pd.read_pickle("./dict_rl_23.pkl") #load_data("./dict_rl_23.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
+dico_rl_pl_23 = pd.read_pickle("./dict_rl_final_23.pkl") #load_data("./dict_rl_23.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
 
 st.session_state['dico'] = dico_rl_pl_23
 
@@ -102,13 +102,18 @@ with col_result_find_author :
 	index_pl = st.number_input('which index ?')
 	
 	add_price = st.button('add a price')
+	replace_price = st.button('modif a price')
 
 	if add_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].setdefault( index_pl, add_to_dict)
+	elif replace_price :
+		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl] = add_to_dict
+		
+		st.write(st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl])
 
 	#st.session_state['dico'][158]["livre"]["prix_litteraire"][1]['lauréat'] = 'OUI'
 	#st.session_state['dico'][316]["livre"]["prix_litteraire"].pop(2)
-	with open('./dict_rl_23.pkl', 'wb') as fp:
+	with open('./dict_rl_final_23.pkl', 'wb') as fp:
 		pickle.dump(st.session_state['dico'], fp)
 
 	st.write(st.session_state['dico'][index_find_auteur]['livre']['titre'])
