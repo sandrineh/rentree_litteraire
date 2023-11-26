@@ -74,7 +74,18 @@ with cont_1:
 	dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")	
 	df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz).T
 	st.write("dico")
-	st.dataframe(df_rl_dataviz_pl)
+
+	st.write(len(['ok' for l in df_rl_dataviz_pl if dico_rl_dataviz[l]['livre']['RL'] == 'RL']))
+
+	#for l in dico_rl_dataviz :
+	#	if dico_rl_dataviz[l]['livre']['RL'] == 'RL' :
+	#		st.write('ok')
+	#	else : 
+	#		st.write('not ok')
+	#st.write(len(df_rl_dataviz_pl))
+	#st.metric(label="Premiers romans", value = len(df_rl_dataviz_pl.loc[df_rl_dataviz_pl['livre']['RL']=='RL']))
+	#st.dataframe(pd.json_normalize(df_rl_dataviz_pl['livre'].to_dict()))
+
 		
 
 	st.write("liste RL")
