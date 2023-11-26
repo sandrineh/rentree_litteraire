@@ -31,6 +31,8 @@ from streamlit_option_menu import option_menu
 
 import altair as alt
 
+import pickle
+
 
 
 # 3.Setup de l'application Streamlit  - Streamlit webpage properties / set up the app with wide view preset and a title
@@ -43,8 +45,14 @@ st.write("RL_2023 GO")
 
 @st.cache_data  # 👈 Add the caching decorator
 def load_data(url):
-    df_rl_dataviz = pd.read_pickle(url)
+    df_rl_dataviz = pd.read_pickle(url) #"./dict_rl_final_23.pkl" pd.DataFrame.from_dict(pd.read_pickle(url)).T
     return df_rl_dataviz
+
+@st.cache_data  # 👈 Add the caching decorator
+def load_data_dict(url):
+    df_rl_dataviz_pl = pd.read_pickle(url) #"./dict_rl_final_23.pkl" pd.DataFrame.from_dict(pd.read_pickle(url)).T
+    return df_rl_dataviz_pl
+
 
 ### A. Sidebar
 
@@ -57,10 +65,22 @@ with st.sidebar:
 cont_1 = st.container()
 cont_metric = st.container()
 cont_geo = st.container()
+
 with cont_1:
-	df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz
+	
+	df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
 	df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
-	st.dataframe(df_rl_dataviz.head())
+	
+	dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")	
+	df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz).T
+	st.write("dico")
+	st.dataframe(df_rl_dataviz_pl)
+		
+
+	st.write("liste RL")
+	st.dataframe(df_rl_dataviz)
+	st.write(dico_rl_dataviz[2]['livre'])
+	
 
 	st.button("Rerun")
 

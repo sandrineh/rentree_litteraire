@@ -103,15 +103,15 @@ with col_result_find_author :
 	
 	add_price = st.button('add a price')
 	replace_price = st.button('modif a price')
-	delete_price = st.button('delete a price')
+	#delete_price = st.button('delete a price')
 
 	if add_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].setdefault( index_pl, add_to_dict)
 	elif replace_price :
 		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl] = add_to_dict
 		
-	if delete_price : 
-		st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].pop(index_pl)
+	#if delete_price : 
+		#st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"].pop(index_pl)
 	
 	st.write(st.session_state['dico'][index_find_auteur]["livre"]["prix_litteraire"][index_pl])
 
@@ -125,121 +125,22 @@ with col_result_find_author :
 	
 	
 		
+#df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
+#	df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
+#	dico_rl_dataviz = load_data_dict("./dict_rl_final_23.pkl")
+#	dico_if_rl_dataviz = {e:r for e,r in zip(df_rl_dataviz['EAN'], df_rl_dataviz['RL'])}
+#	
+#	df_rl_dataviz_pl = pd.DataFrame.from_dict(load_data_dict("./dict_rl_final_23.pkl")).T
+#	st.write("dico")
+#	
+#	
+#	for k in dico_rl_dataviz.keys() : 
+#		e = dico_rl_dataviz[k]['livre']['ean']
+#		if e in dico_if_rl_dataviz.keys() :
+#			dico_rl_dataviz[k]['livre']['RL'] = 'RL'
+#		else :
+#			dico_rl_dataviz[k]['livre']['RL'] = ''
+#			
 
-#with col_result_find_author :
-#	st.form("ajout prix litteraire"):
-#		nom_prix = st.selectbox('nom prix', ['Prix Alain Spiess','FEMINA','Grand Prix de l\'Académie Française','Prix André Malraux',
-#											 'Prix de Flore','Prix Décembre','Prix Goncourt','Prix Interallié','Prix Wepler','RENAUDOT',
-#											 'Prix Medicis'])
-#		premier_roman = st.selectbox('PREMIER ROMAN', ['OUI', 'NON'])
-#		types_livre = st.selectbox("type livre", ['Romans français' , 'Essais', 'Romans étrangers'])
-#		genre = st.selectbox('genre', ['F', 'M'])
-#		
-#		pays = st.selectbox("Pays", list(df_rl_total_test['PAYS'].unique()), index = None)
-#		continent = st.selectbox("Continent", list(df_rl_total_test['CONTINENT'].unique()), index = None)
-#		langue_traduction = st.selectbox("Traduit de", list(df_rl_total_test['Traduit de'].unique()), index = None)
-#		traducteurice = st.text_input('Traduit par')
-#		
-#		nb_index = st.number_input("index")
-#		
-#		submit_utl = st.form_submit_button('Submit my picks')
-#
-#liste_rl_titre = []
-
-#if pays == None :
-#	pays = st.text_input("ajout pays")#
-
-#if langue_traduction == None :
-#	langue_traduction = st.text_input("ajout langue")#
-
-#if continent == None :
-#	continent = st.text_input("ajout continent")#
-
-#	
-##your code
-#if submit_utl : 
-#	data_livre = requests.get(url_titre).content
-#	data_livre_soup = BeautifulSoup(data_livre,"html.parser")
-#	
-#	#### infos du livre ###
-#	
-#	## Catégories
-#	data_livre_cat = data_livre_soup.find('div', attrs={"id" : "main_breadcrumb",
-#								  "class" : "breadcrumbs"}).findAll('span')
-#	liste_cat = [cat.get_text(strip=True) for cat in data_livre_cat]
-#	liste_cat_final = [c for c in liste_cat if c !='›']
-#	
-#	## Titre
-#	data_livre_titre = data_livre_soup.find('h1', attrs={"class" : "product-title"}).get_text(strip=True)
-#	#print("titre : ", data_livre_titre, "\n")
-#	
-#	### Auteur
-#	try :
-#		data_livre_auteur = data_livre_soup.find('span', attrs={"class" : "author author--main"}).get_text(strip=True)
-#	except :
-#		data_livre_auteur = data_livre_soup.find('a', attrs={"class" : "author author--main trackme"}).get_text(strip=True)
-#	#print("auteur : ", data_livre_auteur, "\n")
-#	
-#	
-#	### prix grand format
-#	data_livre_prix_gf = data_livre_soup.find('div', attrs={"class" : "price fp-wide--margin-bottom"}).find('span').get_text(strip=True)#.findAll('span', attrs={"class" : "final-price"})
-#	#print("prix grand format : ", data_livre_prix_gf, "\n")
-#	
-#	### prix ebook
-#	try :
-#		data_livre_prix_ebook = data_livre_soup.find('a', attrs={"class" : "ebook"}).get_text(strip=True)
-#		#print("prix ebook : ", data_livre_prix_ebook, "\n")
-#	except AttributeError:
-#		#print("pas de prix ebook", "\n")
-#		data_livre_prix_ebook = "pas de prix ebook"
-#	
-#	
-#	## Couverture
-#	data_livre_couv = data_livre_soup.find('source', attrs={"class" : "lozad"})['data-srcset']
-#	#print("couv", data_livre_couv, "\n")
-#	
-#	
-#	## Caractéristique
-#	data_livre_carac = data_livre_soup.find('ul', attrs={"class" :"informations-container"}).get_text("|",strip=True) #.find_all('li',attrs{"class" :"information"}).get_text()
-#	#print("caracteristiques : ", data_livre_carac.get_text(),"\n")
-#	
-#	
-#	dic_rl_parus = {'url' : url_titre, #https://www.decitre.fr/livres/la-femme-a-la-valise-9782376650959.html
-#		'categorie' : liste_cat_final,
-#		'titre':data_livre_titre,
-#		'auteur':data_livre_auteur,
-#		'prix_gf':data_livre_prix_gf,
-#		'prix_ebook':data_livre_prix_ebook,
-#		#'caracteristiques_bis' : temp_dict,
-#		'couverture':data_livre_couv,
-#		'caracteristiques':data_livre_carac,
-#		'RL' : 'RL',
-#		'PREMIER_ROMAN' : premier_roman,
-#		'TYPES' : types_livre,
-#		'GENRE' : genre,
-#		'PAYS' : pays,
-#		'CONTINENT' : continent,
-#		'Traduit de' : langue_traduction,
-#		'Traduit par' : traducteurice,
-#		}
-#	
-#	
-#	## Caractéristique
-#	data_livre_carac_dict = data_livre_soup.find('ul', attrs={"class" :"informations-container"}).findAll('li', attrs={"class" : "information"})
-#	for c in data_livre_carac_dict :
-#		try :
-#			k = c.find('span').get_text(strip=True)
-#			v = c.find('div', attrs={"class" :"value"}).get_text(strip=True)
-#		except AttributeError:
-#			print("NC")
-#		dic_rl_parus[k]=v
-#	
-#	liste_rl_titre.append(dic_rl_parus)#
-
-#	df_rl_total_test = pd.concat([df_rl_total_test,pd.DataFrame(liste_rl_titre, index=[int(nb_index)])])#
-
-## export au format pickle
-#df_rl_total_test.to_pickle("./liste_rl_total_test.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/#
-
-#df_rl_total_test = pd.read_pickle("./liste_rl_total_test.pkl") #/content/drive/MyDrive/Data4Good/rentree_litteraire/2023/
-#st.dataframe(df_rl_total_test.tail(2))#
+#	with open('./dict_rl_final_20231126.pkl', 'wb') as fp:
+#		pickle.dump(dico_rl_dataviz, fp)#
