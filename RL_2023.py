@@ -65,58 +65,106 @@ with st.sidebar:
 cont_1 = st.container()
 cont_metric = st.container()
 cont_geo = st.container()
+cont_prix_litt = st.container()
 
 with cont_1:
 	
 	df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
 	df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
+
+	#je charge le dictionnaire 
+	dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")
+
+	#je transforme le dictionnaire en dataframe
+	df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz, orient='index')
+
+	#affichage du dataframe créé depuis le dico
+	st.subheader("dataframe from dico")
+	st.dataframe(df_rl_dataviz_pl.head(2))
+
+	st.divider()
+
+	st.subheader("Filter of dataframe from dico")
+	#l'idée est de filtrer sur les ouvrages identifié comme ouvrage de la rentrée littéraire
+	# Filtre => unique les livres RL
+	list_livre_rl = list(filter(lambda x: x['livre']['RL'] != '', dico_rl_dataviz.values()))
+	df_list_livre_rl = pd.DataFrame(list_livre_rl)
+	st.dataframe(df_list_livre_rl.head(2))
+	st.write(len(df_list_livre_rl))
 	
-	dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")	
-	df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz).T
-	st.write("dico")
+	st.divider()
+	st.divider()
 
-	st.write(len(['ok' for l in df_rl_dataviz_pl if dico_rl_dataviz[l]['livre']['RL'] == 'RL']))
-
-	#for l in dico_rl_dataviz :
-	#	if dico_rl_dataviz[l]['livre']['RL'] == 'RL' :
-	#		st.write('ok')
-	#	else : 
-	#		st.write('not ok')
-	#st.write(len(df_rl_dataviz_pl))
-	#st.metric(label="Premiers romans", value = len(df_rl_dataviz_pl.loc[df_rl_dataviz_pl['livre']['RL']=='RL']))
-	#st.dataframe(pd.json_normalize(df_rl_dataviz_pl['livre'].to_dict()))
-
-		
-
-	st.write("liste RL")
-	st.dataframe(df_rl_dataviz)
-	st.write(dico_rl_dataviz[2]['livre'])
+	#st.subheader("liste RL")
+	#st.dataframe(df_rl_dataviz)
+	#st.write(dico_rl_dataviz[2]['livre'])
 	
-
-	st.button("Rerun")
+	#st.button("Rerun")
 
 with cont_metric :
 	col_metric, col_graph_saiso, col_graph_genre = st.columns([2,4,4])
 	with col_metric : 
-		st.metric(label="Livres", value=len(df_rl_dataviz.EAN.unique()))
-		st.metric(label="Editeurs", value = len(df_rl_dataviz.Editeur.unique()))
-		st.metric(label="Premiers romans", value = len(df_rl_dataviz.loc[df_rl_dataviz['PREMIER_ROMAN']=='PREMIER ROMAN']))
+		st.markdown("#### Recap")
+		#Metric nb Ouvrages
+		liste_ean = set([l['ean'] for l in df_list_livre_rl['livre']])
+		st.metric(label="Livres", value=len(liste_ean))
+
+		#Metric nb Editeurs
+		liste_editeur = set([l['maison_edition'] for l in df_list_livre_rl['livre']])
+		st.metric(label="Editeurs", value = len(liste_editeur))
+
+		#Metric Premier Roman
+		list_livre_rl_prem_roman = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['premier_roman'] == 'PREMIER ROMAN',
+											 dico_rl_dataviz.values()))
+		st.metric(label="Premiers romans", value = len(list_livre_rl_prem_roman))
+	
 	with col_graph_saiso :
-		df_rl_dataviz_saiso = df_rl_dataviz['MOIS'].value_counts().reset_index().rename(columns={'index':'Mois','MOIS':"Nb ouvrages"}).sort_values(by='Mois')
-		#st.dataframe(df_rl_dataviz_saiso) 
-		st.bar_chart(df_rl_dataviz_saiso, x='Mois', y="Nb ouvrages")
-	with col_graph_genre : 
+	# Filtre => unique les livres RL et mois de sortie
+		dico_saiso_sorties_mensuelles = []
+		liste_mois = ['June', 'July', 'August', 'September', 'October', 'November', 'December', 'January']
+		for mois in liste_mois :
+			list_livre_rl_mois = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['mois de parution'] == mois,
+											 dico_rl_dataviz.values()))
+			
+			dico_saiso_sorties_mensuelles.append([mois, len(list_livre_rl_mois)])
+	
+		df_saiso_sorties_mensuelles = pd.DataFrame.from_dict(dico_saiso_sorties_mensuelles).rename(columns={0:'Mois', 1:'Nb ouvrages'})
+		df_saiso_sorties_mensuelles['nb_mois'] = [str(i)+'_'+m for i, m in enumerate(df_saiso_sorties_mensuelles['Mois'])]
+		#st.dataframe(df_saiso_sorties_mensuelles)
+		st.markdown("#### Nombre d\'ouvrages sortis par mois")
+		st.bar_chart(df_saiso_sorties_mensuelles, x='nb_mois', y="Nb ouvrages")
+		
+	with col_graph_genre :
+		st.markdown("#### Nombre d\'ouvrages par genre")
+		dico_genre = []
+		liste_genre = ['M', 'F', 'MIXTE', 'NB', 'NC']
+		for genre in liste_genre :
+			list_livre_rl_genre = list(filter(lambda x: x['livre']['RL'] != '' and x['genre'] == genre,
+											 dico_rl_dataviz.values()))
+			dico_genre.append([genre, len(list_livre_rl_genre)])
+	
+		df_genre = pd.DataFrame.from_dict(dico_genre).rename(columns={0:'genre', 1:'Nb ouvrages'})
+		#st.write(df_genre)
+		
 		## Create subplots: use 'domain' type for Pie subplot
 		fig = make_subplots(rows=1, cols=1, specs=[[{'type':'domain'}]])
-		df_rl_dataviz_genre = df_rl_dataviz.GENRE.value_counts().reset_index()
-		#st.dataframe(df_rl_dataviz_genre) #fig.update_layout(height=800)
-		fig.add_trace(go.Pie(labels=df_rl_dataviz_genre['index'], values=round(df_rl_dataviz_genre.GENRE,0), name="Casting",
+		fig.add_trace(go.Pie(labels=df_genre['genre'], values=df_genre['Nb ouvrages'], name="Casting",
 							 title='Nb de roman par genre', hole=.3))
 		st.plotly_chart(fig,theme=None,use_container_width=True)
 
 with cont_geo:
 	col_map, col_geo_chart = st.columns([4,2])
-	df_rl_dataviz_geo = df_rl_dataviz[['PAYS','latitude','longitude','CONTINENT','EAN']].loc[df_rl_dataviz.RL == 'RL'].groupby(['PAYS','latitude','longitude','CONTINENT']).count().reset_index()
+	
+	liste_pays = set(df_list_livre_rl['pays'])
+	dico_pays = []
+	for pays in liste_pays :
+		list_livre_rl_pays = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['pays'] == pays, dico_rl_dataviz.values()))
+		dico_pays.append([pays, len(list_livre_rl_pays)])
+
+	df_pays = pd.DataFrame.from_dict(dico_pays).rename(columns={0:'Pays', 1:'Nb ouvrages'})
+	#st.write(df_pays)
+	
+	df_rl_dataviz_geo = df_list_livre_rl[['pays','latitude','longitude','continent']].groupby(['pays','latitude','longitude','continent']).count().reset_index()
 	
 	continent_color = {'EUROPE' : '#00b6cb',
 	'NORTH AMERICA': '#124559',
@@ -127,8 +175,9 @@ with cont_geo:
 	'OCEANIA' : '#ff7043',
 	'CARIBBEAN' : '#f2bedb'}
 	
-	df_rl_dataviz_geo.insert(4, 'continent_color', df_rl_dataviz_geo.CONTINENT.apply(lambda c :continent_color[c]))
-	with col_map : 
+	df_rl_dataviz_geo.insert(4, 'continent_color', df_rl_dataviz_geo.continent.apply(lambda c :continent_color[c]))
+	with col_map :
+		st.markdown("#### Répartition géographique des auteurs")
 		st.map(df_rl_dataviz_geo,
 		    latitude='latitude',
 		    longitude='longitude',
@@ -136,6 +185,20 @@ with cont_geo:
 			color='continent_color')
 
 	with col_geo_chart :
+		st.markdown("#### Pays d'origine des auteurs")
 		#st.dataframe(df_rl_dataviz_geo.sort_values('EAN', ascending = False))
-		fig=px.bar(df_rl_dataviz_geo.sort_values('EAN', ascending = False).head(10), x='EAN',y='PAYS', orientation='h')
-		st.write(fig)
+		fig=px.bar(df_pays.sort_values('Nb ouvrages', ascending = False).head(10), x='Nb ouvrages',y='Pays', orientation='h')
+		st.write(fig)	
+
+with st.sidebar:
+	liste_prix_litt = set([pl['nom_prix'] for l in df_list_livre_rl['livre'] for pl in l['prix_litteraire'].values()])
+	select_prix_litt = st.selectbox('Selection prix', liste_prix_litt)
+	
+	liste_prix_litt_detail = set([pl['nom_prix_detail'] for l in df_list_livre_rl['livre'] for pl in l['prix_litteraire'].values() 
+								 if pl['nom_prix'] == select_prix_litt])
+	select_prix_litt_detail = st.selectbox('Selection prix detail', liste_prix_litt_detail)
+
+st.divider()
+with cont_prix_litt :
+	st.markdown('### To be continued')
+
