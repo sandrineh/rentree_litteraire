@@ -54,7 +54,7 @@ def load_data_dict(url):
     return df_rl_dataviz_pl
 
 #je charge le dictionnaire 
-dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")
+dico_rl_dataviz = load_data_dict("docs/dict_rl_final_20231126.pkl")
 
 
 if 'select_prix_liit' not in st.session_state:
@@ -158,6 +158,7 @@ with cont_metric :
 							 title='Nb de roman par genre', hole=.3))
 		st.plotly_chart(fig,theme=None,use_container_width=True)
 
+##### Pays d'origine des auteurs
 with cont_geo:
 	col_map, col_geo_chart = st.columns([4,2])
 	
@@ -237,14 +238,25 @@ with cont_prix_litt :
 	#Affichage des livres sélectionnées par Prix Littéraire suivant sélection dans sidebar. Tout est affiché si pas de sélection.
 	st.markdown('### Liste sélectionné•es par Prix littéraire : Rentrée Littéraire 2023')
 	select_prix_liit = select_pl(select_prix_litt_detail)
-	st.dataframe(select_prix_liit[['lauréat','Auteur','Livre','maison_edition','nom_prix','nom_prix_detail',
-									   'premiere_selection','deuxieme_selection','troisieme_selection']].sort_values('nom_prix').reset_index(drop = True).style.applymap(cooling_highlight, subset=['lauréat']) ,height=530)
+	select_prix_liit = select_prix_liit[['lauréat','Auteur','Livre','maison_edition','nom_prix','nom_prix_detail',
+									   'premiere_selection','deuxieme_selection','troisieme_selection']].sort_values('nom_prix').reset_index(drop = True)
+	
+	select_prix_liit_style = select_prix_liit.style.applymap(cooling_highlight, subset=['lauréat'])
+	
+	st.dataframe(select_prix_liit_style)
 
-start_color, end_color = st.select_slider(
-    'Select a range of color wavelength',
-    options=['Première sélection', 'Deuxième sélection', 'Troisième sélection'],
-    value=('Première sélection', 'Troisième sélection'))
-st.write('You selected wavelengths between', start_color, 'and', end_color)
+	start_color, end_color = st.select_slider(
+	    'Select a range of color wavelength',
+	    options=['Première sélection', 'Deuxième sélection', 'Troisième sélection'],
+	    value=('Première sélection', 'Troisième sélection'))
+	st.write('You selected wavelengths between', start_color, 'and', end_color)
+	
+	if start_color == 'Première sélection' and end_color == 'Troisième sélection' :
+		st.dataframe(select_prix_liit.loc[select_prix_liit.troisieme_selection == 'OUI'])
+	elif start_color == 'Première sélection' and end_color == 'Deuxième sélection' :
+		st.dataframe(select_prix_liit.loc[select_prix_liit.deuxieme_selection == 'OUI'])
+	else : 
+		st.dataframe(select_prix_liit.loc[select_prix_liit.premiere_selection == 'OUI'])
 
 
 
