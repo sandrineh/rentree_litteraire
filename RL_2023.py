@@ -53,6 +53,14 @@ def load_data_dict(url):
     df_rl_dataviz_pl = pd.read_pickle(url) #"./dict_rl_final_23.pkl" pd.DataFrame.from_dict(pd.read_pickle(url)).T
     return df_rl_dataviz_pl
 
+#je charge le dictionnaire 
+dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")
+
+
+if 'select_prix_liit' not in st.session_state:
+	st.session_state['select_prix_liit'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],y] for x in list(filter(lambda x: x['livre']['prix_litteraire'] != {}, dico_rl_dataviz.values())) for y in x['livre']['prix_litteraire'].values() ], columns = ['Auteur','Livre','maison_edition','prix'])
+	st.session_state['select_prix_liit'] = pd.concat([st.session_state['select_prix_liit'], pd.json_normalize(st.session_state['select_prix_liit'].pop("prix"))], axis=1)
+
 
 ### A. Sidebar
 
@@ -68,29 +76,27 @@ cont_geo = st.container()
 cont_prix_litt = st.container()
 
 with cont_1:
+	with st.expander('dataframes') : 
+		df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
+		df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
 	
-	df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
-	df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
+	
+		#je transforme le dictionnaire en dataframe
+		df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz, orient='index')
+	
+		#affichage du dataframe créé depuis le dico
+		st.subheader("dataframe from dico")
+		st.dataframe(df_rl_dataviz_pl.head(2))
 
-	#je charge le dictionnaire 
-	dico_rl_dataviz = load_data_dict("./dict_rl_final_20231126.pkl")
-
-	#je transforme le dictionnaire en dataframe
-	df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz, orient='index')
-
-	#affichage du dataframe créé depuis le dico
-	st.subheader("dataframe from dico")
-	st.dataframe(df_rl_dataviz_pl.head(2))
-
-	st.divider()
-
-	st.subheader("Filter of dataframe from dico")
-	#l'idée est de filtrer sur les ouvrages identifié comme ouvrage de la rentrée littéraire
-	# Filtre => unique les livres RL
-	list_livre_rl = list(filter(lambda x: x['livre']['RL'] != '', dico_rl_dataviz.values()))
-	df_list_livre_rl = pd.DataFrame(list_livre_rl)
-	st.dataframe(df_list_livre_rl.head(2))
-	st.write(len(df_list_livre_rl))
+		st.divider()
+	
+		st.subheader("Filter of dataframe from dico")
+		#l'idée est de filtrer sur les ouvrages identifié comme ouvrage de la rentrée littéraire
+		# Filtre => unique les livres RL
+		list_livre_rl = list(filter(lambda x: x['livre']['RL'] != '', dico_rl_dataviz.values()))
+		df_list_livre_rl = pd.DataFrame(list_livre_rl)
+		st.dataframe(df_list_livre_rl.head(2))
+		st.write(len(df_list_livre_rl))
 	
 	st.divider()
 	st.divider()
@@ -196,9 +202,52 @@ with st.sidebar:
 	
 	liste_prix_litt_detail = set([pl['nom_prix_detail'] for l in df_list_livre_rl['livre'] for pl in l['prix_litteraire'].values() 
 								 if pl['nom_prix'] == select_prix_litt])
-	select_prix_litt_detail = st.selectbox('Selection prix detail', liste_prix_litt_detail)
+	select_prix_litt_detail = st.selectbox('Selection prix detail', liste_prix_litt_detail, None)
 
 st.divider()
+
+#### Analyse prix Littéraire
 with cont_prix_litt :
-	st.markdown('### To be continued')
+	#Pour afficher la liste des ouvrages avec au moins une sélection à un prix littéraire
+	def select_pl(pl):
+		if pl == None : 
+			select_prix_liit = st.session_state['select_prix_liit'][['Auteur','Livre','maison_edition','nom_prix', 'nom_prix_detail','premiere_selection','deuxieme_selection','troisieme_selection','lauréat']].sort_values(['nom_prix','nom_prix_detail']).reset_index(drop = True)
+		else :
+			select_prix_liit = st.session_state['select_prix_liit'].loc[st.session_state['select_prix_liit']['nom_prix_detail'] == pl]
+			#select_prix_liit = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],y] for x in list_livre_prix_litt for y in x['livre']['prix_litteraire'].values() if y['nom_prix_detail'] == pl], columns = ['Auteur','Livre','maison_edition','prix'])
+			#select_prix_liit = pd.concat([select_prix_liit , pd.json_normalize(select_prix_liit.pop("prix"))], axis=1)
+			
+		return select_prix_liit#[['Auteur','Livre','maison_edition','prix']]
+	
+	#Fonction pour mettre en lumière le titre qui est lauréat pour un prix
+	def cooling_highlight(val):
+		color = '#6dd3ce' if val == 'OUI' else ''
+		return f'background-color: {color}'
+
+	#Affichage de la liste des lauréats 
+	st.markdown('### Liste des lauréats aux Prix littéraire : Rentrée Littéraire 2023')
+
+	df_laureat = st.session_state['select_prix_liit'].loc[st.session_state['select_prix_liit']['lauréat'] == 'OUI'].sort_values('nom_prix').reset_index(drop = True)
+	
+	#pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],y] for x in list_livre_prix_litt for y in x['livre']['prix_litteraire'].values() if y['lauréat'] == 'OUI'] , columns = ['Auteur','Livre','maison_edition','prix'])
+	#df_laureat = pd.concat([df_laureat , pd.json_normalize(df_laureat.pop("prix"))], axis=1)
+	
+	st.dataframe(df_laureat[['Auteur','Livre','maison_edition','nom_prix','nom_prix_detail']])
+
+	#Affichage des livres sélectionnées par Prix Littéraire suivant sélection dans sidebar. Tout est affiché si pas de sélection.
+	st.markdown('### Liste sélectionné•es par Prix littéraire : Rentrée Littéraire 2023')
+	select_prix_liit = select_pl(select_prix_litt_detail)
+	st.dataframe(select_prix_liit[['lauréat','Auteur','Livre','maison_edition','nom_prix','nom_prix_detail',
+									   'premiere_selection','deuxieme_selection','troisieme_selection']].sort_values('nom_prix').reset_index(drop = True).style.applymap(cooling_highlight, subset=['lauréat']) ,height=530)
+
+start_color, end_color = st.select_slider(
+    'Select a range of color wavelength',
+    options=['Première sélection', 'Deuxième sélection', 'Troisième sélection'],
+    value=('Première sélection', 'Troisième sélection'))
+st.write('You selected wavelengths between', start_color, 'and', end_color)
+
+
+
+
+
 
