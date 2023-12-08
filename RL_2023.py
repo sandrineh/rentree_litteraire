@@ -153,7 +153,7 @@ with cont_metric :
 		st.bar_chart(df_saiso_sorties_mensuelles, x='nb_mois', y="Nb ouvrages")
 
 with cont_tab :
-	rent_litt, prem_roman, geography, prixlitt = st.tabs(["Rentrée Littéraire", "Premier Roman", "Geographie", "Prix Littéraire"])	
+	rent_litt, prem_roman, genre_tab, prixlitt = st.tabs(["Rentrée Littéraire", "Premier Roman", "Geographie", "Prix Littéraire"])	
 	with rent_litt:
 		col_graph_rl, col_text_rl = st.columns(2, gap='small')
 
@@ -259,13 +259,13 @@ with cont_tab :
 			note_page = "*On se base ici sur l'idée qu'un lecteur « normal » lit environs 250 à 300 mots par minute - ce qui représente 1 page toutes les deux minutes, soit environ 30 pages par heure."
 			st.markdown(f'<div style="font-size: 12px;">{note_page}</div>', unsafe_allow_html=True)
 
+	
+	st.divider()
+	
 	col_map_2, col_graph_saiso, col_graph_genre = st.columns(3)
 
-		
 	with st.container() :
-	# Filtre => unique les livres RL et mois de sortie
-		st.markdown("#### Répartition Géographique des auteurs (cliquer pour filtrer)")
-		st.markdown(f"Pour rappel : sont de langue française, sont des traductions.")
+		# Filtre => uniquement les livres de la Rentree Litteraire
 		
 		col_map, col_geo_chart = st.columns(2)
 		with col_map :
@@ -285,7 +285,12 @@ with cont_tab :
 			df_rl_dataviz_geo.insert(4, 'continent_color', df_rl_dataviz_geo.continent.apply(lambda c :continent_color[c]))
 			#st.dataframe(df_rl_dataviz_geo)
 
-			#st.markdown("#### Répartition géographique des auteurs")
+			nb_livre_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] == 'VF', dico_rl_dataviz.values())))
+			nb_livre_hors_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] != 'VF', dico_rl_dataviz.values())))
+		
+			st.markdown(f"**Répartition Géographique des auteurs (cliquer pour filtrer)**")
+			st.markdown(f"Pour rappel : **:blue[{nb_livre_vf}]** sont de langue française, **:blue[{nb_livre_hors_vf}]** sont des traductions.")
+			
 			st.map(df_rl_dataviz_geo,
 			    latitude='latitude',
 			    longitude='longitude',
@@ -294,6 +299,7 @@ with cont_tab :
 	
 		
 		with col_geo_chart :
+			st.markdown(f"**Top 10 des pays d'origine des auteurs**")
 			liste_pays = set(df_list_livre_rl['pays'])
 			dico_pays = []
 			for pays in liste_pays :
@@ -303,13 +309,58 @@ with cont_tab :
 			df_pays = pd.DataFrame.from_dict(dico_pays).rename(columns={0:'Pays', 1:'Nb ouvrages'})
 			#st.write(df_pays)
 		
-			st.markdown("#### TOp 10 des pays d'origine des auteurs")
 			fig_top_origine_auteur = px.bar(df_pays.sort_values('Nb ouvrages', ascending = True).tail(10), x='Nb ouvrages',
 											y='Pays', orientation='h')
 			st.plotly_chart(fig_top_origine_auteur, use_container_width=True)
+	st.divider()
 
+	# Partie Editeurs
+	col_edi_img, col_edi_titre= st.columns([0.5,8])
+	with col_edi_img :
+		st.image('docs/icons8-livres-64.png') 
+	with col_edi_titre :
+		st.markdown("#### Editeurs")
+
+	#dataframe Editeurs | nb d'ouvrages
+	liste_editeur = set([x['livre']['maison_edition'] for x in dico_rl_dataviz.values() if x['livre']['RL']=='RL'])
+	dico_editeur = []
+	for editeur in liste_editeur :
+		list_livre_rl_editeur = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['maison_edition']==editeur,
+										 dico_rl_dataviz.values()))
+		dico_editeur.append([editeur, len(list_livre_rl_editeur)])
+
+	df_editeur = pd.DataFrame.from_dict(dico_editeur).rename(columns={0:'editeur', 1:'Nb ouvrages'}).sort_values('Nb ouvrages', ascending=False).reset_index(drop = True)
+
+	st.markdown(f"**Top éditeurs avec plus de 10 ouvrages parus**")
+	st.dataframe(df_editeur[df_editeur['Nb ouvrages']>=10])
+
+
+	fig = go.Figure(data=[go.Sankey(
+	node = dict(
+	pad = 15,
+	thickness = 20,
+	line = dict(color = "black", width = 0.5),
+	label = ["A1", "A2", "B1", "B2", "C1", "C2"],
+	color = "blue",
+	),
+	link = dict(
+	source = [0, 1, 0, 2, 3, 3], # indices correspond to labels, eg A1, A2, A1, B1, …
+	target = [2, 3, 3, 4, 4, 5],
+	value = [8, 4, 2, 8, 4, 2]
+	))])
+	
+	fig.update_layout(
+	title_text="Basic Sankey Diagram",
+	font_family="Courier New",
+	font_color="blue",
+	font_size=12,
+	title_font_family="Times New Roman",
+	title_font_color="red",
+	)
+	st.write(fig)
+	
 ##### Pays d'origine des auteurs
-	with geography: #cont_geo:
+	with genre_tab:
 
 		#with col_graph_genre :
 		st.markdown("#### Nombre d\'ouvrages par genre")
