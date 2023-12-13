@@ -83,7 +83,6 @@ if 'essais' not in st.session_state:
 	st.session_state['essais'] = ''
 
 
-
 ### A. Sidebar
 
 with st.sidebar:
@@ -93,11 +92,10 @@ with st.sidebar:
 
 
 ### B. Container 
-cont_metric = st.container()
+cont_metric = st.container() #st.container(border = True)
 cont_tab = st.container()
 cont_geo = st.container()
 cont_prix_litt = st.container()
-
 
 df_rl_dataviz = load_data("liste_rl_total_sans_doublon.pkl") #### Import pickel pour dataviz  
 df_rl_dataviz = df_rl_dataviz.loc[df_rl_dataviz.RL == 'RL']
@@ -191,7 +189,7 @@ with cont_tab :
 			df_caract_livre['nombre_pages'] = df_caract_livre['nombre_pages'].str.replace('\D', '',regex=True)
 			df_caract_livre['prix_indicatif'] = df_caract_livre['prix_indicatif'].str.replace(' €','').str.replace(',','.')
 			
-			#st.dataframe(df_caract_livre)
+			st.dataframe(df_caract_livre)
 			
 			#nettoyer les valeurs pour conserver uniquement les nombres. Par exemple je retire pages à "138 pages"
 					#pour garder 138 que je passerais ensuite en int.
@@ -315,6 +313,14 @@ with cont_tab :
 	st.divider()
 
 	# Partie Editeurs
+	# Pour Sankey graph
+	if 'total_columns_rl' not in st.session_state:
+		st.session_state['total_columns_rl'] = pd.DataFrame([[x, x['livre']] for x in list(filter(lambda x: x['livre'] != {}, dico_rl_dataviz.values()))])
+		st.session_state['total_columns_rl'] = pd.concat([st.session_state['total_columns_rl'], pd.json_normalize(st.session_state['total_columns_rl'].pop(0))], axis=1).drop(columns=[1])
+	
+	#dependra du graph voulu
+	only_rl = st.session_state['total_columns_rl'][st.session_state['total_columns_rl']['livre.RL']=='RL']
+	
 	col_edi_img, col_edi_titre= st.columns([0.5,8])
 	with col_edi_img :
 		st.image('docs/icons8-livres-64.png') 
@@ -322,42 +328,112 @@ with cont_tab :
 		st.markdown("#### Editeurs")
 
 	#dataframe Editeurs | nb d'ouvrages
-	liste_editeur = set([x['livre']['maison_edition'] for x in dico_rl_dataviz.values() if x['livre']['RL']=='RL'])
-	dico_editeur = []
-	for editeur in liste_editeur :
-		list_livre_rl_editeur = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['maison_edition']==editeur,
-										 dico_rl_dataviz.values()))
-		dico_editeur.append([editeur, len(list_livre_rl_editeur)])
+	#liste_editeur = set([x['livre']['maison_edition'] for x in dico_rl_dataviz.values() if x['livre']['RL']=='RL'])
+	#dico_editeur = []
+	#for editeur in liste_editeur :
+	#	list_livre_rl_editeur = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['maison_edition']==editeur,
+	#									 dico_rl_dataviz.values()))
+	#	dico_editeur.append([editeur, len(list_livre_rl_editeur)])
+	df_nb_livre_x_editeur = only_rl[['livre.maison_edition', 'livre.ean']].groupby('livre.maison_edition').count().sort_values('livre.ean', ascending=False).reset_index()
+	#df_nb_livre_x_editeur = pd.DataFrame.from_dict(dico_editeur).rename(columns={0:'editeur', 1:'Nb ouvrages'}).sort_values('Nb ouvrages', ascending=False).reset_index(drop = True)
 
-	df_editeur = pd.DataFrame.from_dict(dico_editeur).rename(columns={0:'editeur', 1:'Nb ouvrages'}).sort_values('Nb ouvrages', ascending=False).reset_index(drop = True)
-
+	df_nb_livre_x_editeur_sup_dix = df_nb_livre_x_editeur[df_nb_livre_x_editeur['livre.ean']>=10]
 	st.markdown(f"**Top éditeurs avec plus de 10 ouvrages parus**")
-	st.dataframe(df_editeur[df_editeur['Nb ouvrages']>=10])
+	st.dataframe(df_nb_livre_x_editeur_sup_dix)
 
 
-	fig = go.Figure(data=[go.Sankey(
+	#Dataframe Sankey
+	sankey_df = only_rl[['livre.maison_edition','livre.type',  'genre', 'livre.ean']].groupby(['livre.maison_edition','livre.type',  'genre',]).count().sort_values('livre.ean', ascending=False).reset_index().rename(columns = { "livre.maison_edition": 'maison_edition', 'livre.type': 'type', 'livre.ean':'values'})
+	
+	#pour mon test sur la construction du graphique sankey, je réduis mon analyse sur les editeurs ayant plus de 10 ouvrages à la RL 2023
+	liste_editeur = [e for e in df_nb_livre_x_editeur_sup_dix['livre.maison_edition']]
+	#st.write(liste_editeur)
+	sankey_df = sankey_df[sankey_df['maison_edition'].isin(liste_editeur)]
+
+	#Ici, je crée un dictionnaire permettant d'avoir un index pour les identifier les sources et les targets
+	label_sk = [*sankey_df['maison_edition'].unique(), *sankey_df['type'].unique(), *sankey_df['genre'].unique()]
+	color = ["rgba(31, 119, 180, 0.8)",
+              "rgba(255, 127, 14, 0.8)",
+              "rgba(44, 160, 44, 0.8)",
+              "rgba(214, 39, 40, 0.8)",
+              "rgba(148, 103, 189, 0.8)",
+              "rgba(140, 86, 75, 0.8)",
+              "rgba(227, 119, 194, 0.8)",
+              "rgba(127, 127, 127, 0.8)",
+              "rgba(188, 189, 34, 0.8)",
+              "rgba(23, 190, 207, 0.8)",
+              "rgba(31, 119, 180, 0.8)"]
+	
+	
+	
+	dico_label_sk = dict(zip(label_sk,color))
+	df_label_sk = pd.DataFrame.from_dict(dico_label_sk, orient = 'index').reset_index().rename(columns = {'index':'maison_edition', 0:'color'}).reset_index()
+	st.write(df_label_sk.to_dict())
+
+
+	#pour la première partie du graph les sources sont les editeurs et les targets les types d'ouvrages. Pour déterminer les valeurs, je passe par un groupby. Pour la deuxièle partie, les sources sont les types d'ouvrages et les targets les genres. Pour les valeurs se sont le nb de livres.
+	sankey_df_graph = pd.concat([sankey_df[["maison_edition", "type", "values"]].rename(columns = {"maison_edition": "source", "type": "target"}).groupby(["source", "target"]).sum(),
+								 sankey_df[["type", 'genre', "values"]].rename(columns = {"type" : "source", "genre": "target"}).groupby(["source", "target"]).sum()]).reset_index()
+
+
+	sankey_df_graph.insert(1, 'index_source', sankey_df_graph['source'].apply(lambda x: df_label_sk.to_dict()))
+	#sankey_df_graph.insert(3, 'index_target', sankey_df_graph['target'].apply(lambda x: dico_label_sk[x][0]))
+	#sankey_df_graph.insert(5, 'index_target', sankey_df_graph['target'].apply(lambda x: dico_label_sk[x][1]))
+
+	#st.dataframe(sankey_df_graph)
+	
+	sankey_dico_graph = [{"source":s,"target":t,"value":v} for s,t,v in zip(sankey_df_graph['index_source'],sankey_df_graph['index_target'], sankey_df_graph['values'])]
+	# override gray link colors with 'source' colors
+	opacity = 0.4
+
+	
+	
+	
+	fig_rl = go.Figure(data=[go.Sankey(
 	node = dict(
 	pad = 15,
 	thickness = 20,
 	line = dict(color = "black", width = 0.5),
-	label = ["A1", "A2", "B1", "B2", "C1", "C2"],
-	color = "blue",
+	label = [l for l in dico_label_sk.keys()], #[s for s in sankey_df_graph['source']],#+[t for t in sankey_df['livre.type']],
+	color = ["rgba(31, 119, 180, 0.8)",
+              "rgba(255, 127, 14, 0.8)",
+              "rgba(44, 160, 44, 0.8)",
+              "rgba(214, 39, 40, 0.8)",
+              "rgba(148, 103, 189, 0.8)",
+              "rgba(140, 86, 75, 0.8)",
+              "rgba(227, 119, 194, 0.8)",
+              "rgba(127, 127, 127, 0.8)",
+              "rgba(188, 189, 34, 0.8)",
+              "rgba(23, 190, 207, 0.8)",
+              "rgba(31, 119, 180, 0.8)"],#"blue",
 	),
 	link = dict(
-	source = [0, 1, 0, 2, 3, 3], # indices correspond to labels, eg A1, A2, A1, B1, …
-	target = [2, 3, 3, 4, 4, 5],
-	value = [8, 4, 2, 8, 4, 2]
+	source = [s for s in sankey_df_graph.index_source], # indices correspond to labels, eg A1, A2, A1, B1, …
+	target = [t for t in sankey_df_graph.index_target],
+	value = [v for v in sankey_df_graph['values']],
+	color = ["rgba(31, 119, 180,   0.4)",
+              "rgba(255, 127, 14,  0.4)",
+              "rgba(44, 160, 44,   0.4)",
+              "rgba(214, 39, 40,   0.4)",
+              "rgba(148, 103, 189, 0.4)",
+              "rgba(140, 86, 75,   0.4)",
+              "rgba(227, 119, 194, 0.4)",
+              "rgba(127, 127, 127, 0.4)",
+              "rgba(188, 189, 34,  0.4)",
+              "rgba(23, 190, 207,  0.4)",
+              "rgba(31, 119, 180,  0.4)"]	
 	))])
-	
-	fig.update_layout(
-	title_text="Basic Sankey Diagram",
+
+	fig_rl.update_layout(
+	title_text="Répartition des ouvrages de la Rentrée Littéraire 2023 par éditeur, type et genre",
 	font_family="Courier New",
 	font_color="blue",
 	font_size=12,
 	title_font_family="Times New Roman",
 	title_font_color="red",
 	)
-	st.write(fig)
+	st.write(fig_rl)
+
 	
 ##### Pays d'origine des auteurs
 	with genre_tab:
