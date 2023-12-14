@@ -365,63 +365,37 @@ with cont_tab :
               "rgba(31, 119, 180, 0.8)"]
 	
 	
-	
 	dico_label_sk = dict(zip(label_sk,color))
 	df_label_sk = pd.DataFrame.from_dict(dico_label_sk, orient = 'index').reset_index().rename(columns = {'index':'maison_edition', 0:'color'}).reset_index()
-	st.write(df_label_sk.to_dict())
-
+	#st.dataframe(df_label_sk)
 
 	#pour la première partie du graph les sources sont les editeurs et les targets les types d'ouvrages. Pour déterminer les valeurs, je passe par un groupby. Pour la deuxièle partie, les sources sont les types d'ouvrages et les targets les genres. Pour les valeurs se sont le nb de livres.
 	sankey_df_graph = pd.concat([sankey_df[["maison_edition", "type", "values"]].rename(columns = {"maison_edition": "source", "type": "target"}).groupby(["source", "target"]).sum(),
 								 sankey_df[["type", 'genre', "values"]].rename(columns = {"type" : "source", "genre": "target"}).groupby(["source", "target"]).sum()]).reset_index()
 
-
-	sankey_df_graph.insert(1, 'index_source', sankey_df_graph['source'].apply(lambda x: df_label_sk.to_dict()))
-	#sankey_df_graph.insert(3, 'index_target', sankey_df_graph['target'].apply(lambda x: dico_label_sk[x][0]))
-	#sankey_df_graph.insert(5, 'index_target', sankey_df_graph['target'].apply(lambda x: dico_label_sk[x][1]))
-
+	
+	sankey_df_graph.insert(1, 'index_source', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
+	sankey_df_graph.insert(3, 'index_target', sankey_df_graph['target'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
+	sankey_df_graph.insert(4, 'color', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['color'].values[0]))
+	
 	#st.dataframe(sankey_df_graph)
 	
-	sankey_dico_graph = [{"source":s,"target":t,"value":v} for s,t,v in zip(sankey_df_graph['index_source'],sankey_df_graph['index_target'], sankey_df_graph['values'])]
 	# override gray link colors with 'source' colors
 	opacity = 0.4
-
-	
-	
 	
 	fig_rl = go.Figure(data=[go.Sankey(
 	node = dict(
 	pad = 15,
 	thickness = 20,
 	line = dict(color = "black", width = 0.5),
-	label = [l for l in dico_label_sk.keys()], #[s for s in sankey_df_graph['source']],#+[t for t in sankey_df['livre.type']],
-	color = ["rgba(31, 119, 180, 0.8)",
-              "rgba(255, 127, 14, 0.8)",
-              "rgba(44, 160, 44, 0.8)",
-              "rgba(214, 39, 40, 0.8)",
-              "rgba(148, 103, 189, 0.8)",
-              "rgba(140, 86, 75, 0.8)",
-              "rgba(227, 119, 194, 0.8)",
-              "rgba(127, 127, 127, 0.8)",
-              "rgba(188, 189, 34, 0.8)",
-              "rgba(23, 190, 207, 0.8)",
-              "rgba(31, 119, 180, 0.8)"],#"blue",
+	label = [l for l in dico_label_sk.keys()],
+	color = [c for c in df_label_sk['color']],
 	),
 	link = dict(
 	source = [s for s in sankey_df_graph.index_source], # indices correspond to labels, eg A1, A2, A1, B1, …
 	target = [t for t in sankey_df_graph.index_target],
 	value = [v for v in sankey_df_graph['values']],
-	color = ["rgba(31, 119, 180,   0.4)",
-              "rgba(255, 127, 14,  0.4)",
-              "rgba(44, 160, 44,   0.4)",
-              "rgba(214, 39, 40,   0.4)",
-              "rgba(148, 103, 189, 0.4)",
-              "rgba(140, 86, 75,   0.4)",
-              "rgba(227, 119, 194, 0.4)",
-              "rgba(127, 127, 127, 0.4)",
-              "rgba(188, 189, 34,  0.4)",
-              "rgba(23, 190, 207,  0.4)",
-              "rgba(31, 119, 180,  0.4)"]	
+	color = [c.replace('0.8',str(opacity)) for c in sankey_df_graph['color']]	
 	))])
 
 	fig_rl.update_layout(
