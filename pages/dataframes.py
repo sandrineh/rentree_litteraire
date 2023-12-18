@@ -56,6 +56,22 @@ def load_data_dict(url):
 #je charge le dictionnaire 
 dico_rl_dataviz = load_data_dict("docs/dict_rl_final_20231126.pkl")
 
+if 'caract_livre' not in st.session_state:
+	st.session_state['caract_livre'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'], x['livre']['RL'], x['livre']['caracteristiques']] for x in list(filter(lambda x: x['livre']['caracteristiques'] != {}, dico_rl_dataviz.values()))], columns = ['Auteur','Livre','maison_edition','RL','caracteristiques'])
+	st.session_state['caract_livre'] = pd.concat([st.session_state['caract_livre'], pd.json_normalize(st.session_state['caract_livre'].pop("caracteristiques"))], axis=1)
+	#Je conserve uniquement les livres de la rentree litteraire
+	st.session_state['caract_livre'] = st.session_state['caract_livre'].loc[st.session_state['caract_livre']['RL'] =='RL']
+
+
+if 'couv_livre' not in st.session_state:
+	st.session_state['couv_livre'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'], x['livre']['RL'], x['livre']['autres_infos']] for x in list(filter(lambda x: x['livre']['autres_infos'] != {}, dico_rl_dataviz.values()))], columns = ['Auteur','Livre','maison_edition','RL','autres_infos'])
+	st.session_state['couv_livre'] = pd.concat([st.session_state['couv_livre'], pd.json_normalize(st.session_state['couv_livre'].pop("autres_infos"))], axis=1)
+	
+
+ah = pd.DataFrame([[x, x['livre']] for x in list(filter(lambda x: x['livre'] != {}, dico_rl_dataviz.values()))])
+ah = pd.concat([ah, pd.json_normalize(ah.pop(0))], axis=1)
+st.dataframe(ah)
+
 
 ### B. Container 1
 cont_1 = st.container()
@@ -87,3 +103,98 @@ with cont_1:
 		st.write(len(df_list_livre_rl))
 
 		#st.button("Rerun")
+
+		st.subheader("Dataframe of books features")
+		df_caract_livre = st.session_state['caract_livre']
+		df_caract_livre['nombre_pages'] = df_caract_livre['nombre_pages'].str.replace('\D', '',regex=True)
+		df_caract_livre['prix_indicatif'] = df_caract_livre['prix_indicatif'].str.replace(' €','').str.replace(',','.')
+		st.dataframe(df_caract_livre)
+		
+		st.write(len(df_caract_livre))
+
+		st.subheader("Dataframe of books cover link")
+		#Je conserve uniquement les livres de la rentree litteraire
+		df_couv_livre = st.session_state['couv_livre'].loc[st.session_state['couv_livre']['RL'] =='RL']
+		st.dataframe(df_couv_livre)
+		
+		st.write(len(df_couv_livre))
+
+
+data_df = df_couv_livre.head(10)
+data_df['couverture'] = data_df['couverture'].apply(lambda i : re.sub("\s+(\d\D)", "", i.split(',')[1])
+													 if len(i.split(',')) > 1 else re.sub("\s+(\d\D)", "", i))
+
+st.data_editor(
+    data_df,
+    column_config={
+        "couverture": st.column_config.ImageColumn(
+            "couverture", help="Streamlit app preview screenshots"
+        )
+    },
+    hide_index=True,
+)
+
+# --------------- DEBUT CHOIX IMAGE + COMPUTER VISION
+"""
+	L'idée est ici de créer une vue de visuels de couvertures de livres alignés
+	1. Dans un premier temps, dans un container, je mets la liste des urls des images dans une liste et le nom du livre dans une autre
+	2. Je crée la possibilité de sélectionné le ou les livres que je veux afficher
+	3. Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
+"""
+	
+container_cv = st.container()
+
+with container_cv:
+	st.write('pour affichage des couvertures de livres')
+	
+	container_choix_image = st.container()
+	#all_images = st.checkbox("Select one or more images(s)")
+	
+	def load_images():
+		titres_livres = []
+		image_files = []
+		for i,b in zip(data_df['couverture'],data_df['Livre']):
+			if len(i.split(',')) > 1:
+				i_replace = i.split(',')[1]
+			else :
+				i_replace = i
+			image_link = re.sub("\s+(\d\D)", "", i_replace)
+			image_files.append(image_link)
+
+			part = image_link.replace('.webp','').split('/')
+			if b not in titres_livres :
+				titres_livres.append(b)
+			
+			#st.markdown(f"""![Foo]({image_link})""")
+			#st.write(re.sub("\s+(\d\D)", "", i_replace))
+			
+		return image_files, titres_livres
+		
+	image_files, titres_livres = load_images()
+
+	#st.write(image_files, titres_livres)
+	
+	#if all_images:
+	#	view_titres_livres = container_choix_image.multiselect("Select one or more options:", image_files,image_files)
+	#else:
+	#	view_titres_livres =  container_choix_image.multiselect("Select one or more options:", image_files)
+		
+	view_titres_livres = st.multiselect("select image(s)", titres_livres, titres_livres)
+	
+	n = st.number_input("select images grid", 1,7,5)
+	
+	view_images = []
+	# Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
+	for image_file, titre_livre in zip(image_files, titres_livres) :
+		if titre_livre in view_titres_livres:
+			view_images.append(image_file)
+	
+	groups = []
+	for i in range(0, len(view_images), n):
+		groups.append(view_images[i:i+n])
+		
+	for group in groups:
+		cols = st.columns(n)
+		for i, image_file in enumerate(group):
+			cols[i].image(image_file, use_column_width=True)
+# --------------- FIN CHOIX IMAGE + COMPUTER VISION

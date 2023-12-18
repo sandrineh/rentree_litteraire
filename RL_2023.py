@@ -82,7 +82,10 @@ if 'roman_etranger' not in st.session_state:
 if 'essais' not in st.session_state:
 	st.session_state['essais'] = ''
 
-
+if 'couv_livre' not in st.session_state:
+	st.session_state['couv_livre'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'], x['livre']['RL'], x['livre']['autres_infos']] for x in list(filter(lambda x: x['livre']['autres_infos'] != {}, dico_rl_dataviz.values()))], columns = ['Auteur','Livre','maison_edition','RL','autres_infos'])
+	st.session_state['couv_livre'] = pd.concat([st.session_state['couv_livre'], pd.json_normalize(st.session_state['couv_livre'].pop("autres_infos"))], axis=1)
+	
 ### A. Sidebar
 
 with st.sidebar:
@@ -189,7 +192,7 @@ with cont_tab :
 			df_caract_livre['nombre_pages'] = df_caract_livre['nombre_pages'].str.replace('\D', '',regex=True)
 			df_caract_livre['prix_indicatif'] = df_caract_livre['prix_indicatif'].str.replace(' €','').str.replace(',','.')
 			
-			st.dataframe(df_caract_livre)
+			#st.dataframe(df_caract_livre)
 			
 			#nettoyer les valeurs pour conserver uniquement les nombres. Par exemple je retire pages à "138 pages"
 					#pour garder 138 que je passerais ensuite en int.
@@ -258,155 +261,247 @@ with cont_tab :
 			st.markdown(f'<div style="font-size: 12px;">{note_page}</div>', unsafe_allow_html=True)
 
 	
-	st.divider()
-	
-	col_map_2, col_graph_saiso, col_graph_genre = st.columns(3)
-
-	with st.container() :
-		# Filtre => uniquement les livres de la Rentree Litteraire
+		st.divider()
 		
-		col_map, col_geo_chart = st.columns(2)
-		with col_map :
-				
-			df_rl_dataviz_geo = df_list_livre_rl[['pays','latitude','longitude','continent','nom_complet']].groupby(['pays',
-												  'latitude','longitude','continent']).count().reset_index()
-			df_rl_dataviz_geo['nom_complet'] = df_rl_dataviz_geo['nom_complet'].astype('int64')
-			continent_color = {'EUROPE' : '#00b6cb',
-			'NORTH AMERICA': '#124559',
-			'ASIA' : '#5e35b1',
-			'AFRICA' : '#7cb342',
-			'SOUTH AMERICA' : '#598392',
-			'CENTRAL AMERICA' : '#aec3b0',
-			'OCEANIA' : '#ff7043',
-			'CARIBBEAN' : '#f2bedb'}
+		col_map_2, col_graph_saiso, col_graph_genre = st.columns(3)
 	
-			df_rl_dataviz_geo.insert(4, 'continent_color', df_rl_dataviz_geo.continent.apply(lambda c :continent_color[c]))
-			#st.dataframe(df_rl_dataviz_geo)
-
-			nb_livre_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] == 'VF', dico_rl_dataviz.values())))
-			nb_livre_hors_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] != 'VF', dico_rl_dataviz.values())))
-		
-			st.markdown(f"**Répartition Géographique des auteurs (cliquer pour filtrer)**")
-			st.markdown(f"Pour rappel : **:blue[{nb_livre_vf}]** sont de langue française, **:blue[{nb_livre_hors_vf}]** sont des traductions.")
+		with st.container() :
+			# Filtre => uniquement les livres de la Rentree Litteraire
 			
-			st.map(df_rl_dataviz_geo,
-			    latitude='latitude',
-			    longitude='longitude',
-				size= 'nom_complet',
-				color='continent_color')
+			col_map, col_geo_chart = st.columns(2)
+			with col_map :
+					
+				df_rl_dataviz_geo = df_list_livre_rl[['pays','latitude','longitude','continent','nom_complet']].groupby(['pays',
+													  'latitude','longitude','continent']).count().reset_index()
+				df_rl_dataviz_geo['nom_complet'] = df_rl_dataviz_geo['nom_complet'].astype('int64')
+				continent_color = {'EUROPE' : '#00b6cb',
+				'NORTH AMERICA': '#124559',
+				'ASIA' : '#5e35b1',
+				'AFRICA' : '#7cb342',
+				'SOUTH AMERICA' : '#598392',
+				'CENTRAL AMERICA' : '#aec3b0',
+				'OCEANIA' : '#ff7043',
+				'CARIBBEAN' : '#f2bedb'}
+		
+				df_rl_dataviz_geo.insert(4, 'continent_color', df_rl_dataviz_geo.continent.apply(lambda c :continent_color[c]))
+				#st.dataframe(df_rl_dataviz_geo)
+	
+				nb_livre_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] == 'VF', dico_rl_dataviz.values())))
+				nb_livre_hors_vf = len(list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['traduit_de'] != 'VF', dico_rl_dataviz.values())))
+			
+				st.markdown(f"**Répartition Géographique des auteurs (cliquer pour filtrer)**")
+				st.markdown(f"Pour rappel : **:blue[{nb_livre_vf}]** sont de langue française, **:blue[{nb_livre_hors_vf}]** sont des traductions.")
+				
+				st.map(df_rl_dataviz_geo,
+				    latitude='latitude',
+				    longitude='longitude',
+					size= 'nom_complet',
+					color='continent_color')
+		
+			
+			with col_geo_chart :
+				st.markdown(f"**Top 10 des pays d'origine des auteurs**")
+				liste_pays = set(df_list_livre_rl['pays'])
+				dico_pays = []
+				for pays in liste_pays :
+					list_livre_rl_pays = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['pays'] == pays, dico_rl_dataviz.values()))
+					dico_pays.append([pays, len(list_livre_rl_pays)])
+		
+				df_pays = pd.DataFrame.from_dict(dico_pays).rename(columns={0:'Pays', 1:'Nb ouvrages'})
+				#st.write(df_pays)
+			
+				fig_top_origine_auteur = px.bar(df_pays.sort_values('Nb ouvrages', ascending = True).tail(10), x='Nb ouvrages',
+												y='Pays', orientation='h')
+				st.plotly_chart(fig_top_origine_auteur, use_container_width=True)
+		st.divider()
+	
+		# Partie Editeurs
+		# Pour Sankey graph
+		if 'total_columns_rl' not in st.session_state:
+			st.session_state['total_columns_rl'] = pd.DataFrame([[x, x['livre']] for x in list(filter(lambda x: x['livre'] != {}, dico_rl_dataviz.values()))])
+			st.session_state['total_columns_rl'] = pd.concat([st.session_state['total_columns_rl'], pd.json_normalize(st.session_state['total_columns_rl'].pop(0))], axis=1).drop(columns=[1])
+		
+		#dependra du graph voulu
+		only_rl = st.session_state['total_columns_rl'][st.session_state['total_columns_rl']['livre.RL']=='RL']
+		
+		col_edi_img, col_edi_titre= st.columns([0.5,8])
+		with col_edi_img :
+			st.image('docs/icons8-livres-64.png') 
+		with col_edi_titre :
+			st.markdown("#### Editeurs")
+	
+		#dataframe Editeurs | nb d'ouvrages
+		#liste_editeur = set([x['livre']['maison_edition'] for x in dico_rl_dataviz.values() if x['livre']['RL']=='RL'])
+		#dico_editeur = []
+		#for editeur in liste_editeur :
+		#	list_livre_rl_editeur = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['maison_edition']==editeur,
+		#									 dico_rl_dataviz.values()))
+		#	dico_editeur.append([editeur, len(list_livre_rl_editeur)])
+
+		col_top_edi, col_edi_couv = st.columns([3,5])
+
+		with col_top_edi : 
+			df_nb_livre_x_editeur = only_rl[['livre.maison_edition', 'livre.ean']].groupby('livre.maison_edition').count().sort_values('livre.ean', ascending=False).reset_index()
+			#df_nb_livre_x_editeur = pd.DataFrame.from_dict(dico_editeur).rename(columns={0:'editeur', 1:'Nb ouvrages'}).sort_values('Nb ouvrages', ascending=False).reset_index(drop = True)
+		
+			df_nb_livre_x_editeur_sup_dix = df_nb_livre_x_editeur[df_nb_livre_x_editeur['livre.ean']>=10]
+			st.markdown(f"**Top éditeurs avec plus de 10 ouvrages parus**")
+			st.dataframe(df_nb_livre_x_editeur_sup_dix)
+
+		#Dataframe pour affihcage des couvertures des ouvrages
+		with col_edi_couv :
+			st.markdown(f"**On the cover of...**")
+			df_couv_livre = st.session_state['couv_livre'].loc[st.session_state['couv_livre']['RL'] =='RL']
+			df_couv_livre = df_couv_livre[['Auteur', 'Livre', 'maison_edition', 'RL', 'couverture']]
+			df_couv_livre['couverture'] = df_couv_livre['couverture'].apply(lambda i : re.sub("\s+(\d\D)", "", i.split(',')[1])
+															 if len(i.split(',')) > 1 else re.sub("\s+(\d\D)", "", i))
+			
+			# Pour afficher la couverture de l'ouvrage plutôt que l'url dans la colonne "couverture"
+			#st.data_editor(
+			#    df_couv_livre,
+			#    column_config={
+			#        "couverture": st.column_config.ImageColumn(
+			#            "couverture", help="Streamlit app preview screenshots"
+			#        )
+			#    },
+			#    hide_index=True,
+			#)
+
+
+		# --------------- DEBUT CHOIX IMAGE + COMPUTER VISION
+			#"""
+			#	L'idée est ici de créer une vue de visuels de couvertures de livres alignés
+			#	1. Dans un premier temps, dans un container, je mets la liste des urls des images dans une liste et le nom du livre dans une autre
+			#	2. Je crée la possibilité de sélectionné le ou les livres que je veux afficher
+			#	3. Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
+			#"""
+				
+			container_couv = st.container()
+			
+			with container_couv:
+				
+				#container_choix_image = st.container()
+				
+				def load_images():
+					titres_livres = []
+					image_files = []
+					for i,b in zip(df_couv_livre['couverture'],df_couv_livre['Livre']):
+						if len(i.split(',')) > 1:
+							i_replace = i.split(',')[1]
+						else :
+							i_replace = i
+						image_link = re.sub("\s+(\d\D)", "", i_replace)
+						image_files.append(image_link)
+			
+						part = image_link.replace('.webp','').split('/')
+						if b not in titres_livres :
+							titres_livres.append(b)
+						
+					return image_files, titres_livres
+					
+				image_files, titres_livres = load_images()
+
+				# creation de la liste des editeurs
+				liste_editeur= set([edi for edi in df_couv_livre['maison_edition']])
+				
+				select_editeur = st.selectbox("Selectionnez une maison d'éditions", liste_editeur)
+
+				# creation de la liste des titres pour l'editeur sélectionné
+				liste_couv_par_editeur = set([titre for edi,couv,titre in zip(df_couv_livre['maison_edition'], df_couv_livre['couverture'],
+																			 df_couv_livre['Livre']) if edi == select_editeur])
+
+				#st.write(liste_couv_par_editeur)
+				#select_couv_par_editeur = st.selectbox('Selection un ou plusieurs ouvrages', liste_couv_par_editeur, None)
+					
+				view_titres_livres = st.multiselect("select image(s)", liste_couv_par_editeur, liste_couv_par_editeur)
+				
+				n = st.number_input("select images grid", 1,7,5)
+				
+				view_images = []
+				# Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
+				for image_file, titre_livre in zip(image_files, titres_livres) :
+					if titre_livre in view_titres_livres:
+						view_images.append(image_file)
+				
+				groups = []
+				for i in range(0, len(view_images), n):
+					groups.append(view_images[i:i+n])
+					
+				for group in groups:
+					cols = st.columns(n)
+					for i, image_file in enumerate(group):
+						cols[i].image(image_file, use_column_width=True)
+			# --------------- FIN CHOIX IMAGE + COMPUTER VISION
+		
+		
+		#Dataframe pour la creation du graph de type Sankey
+		sankey_df = only_rl[['livre.maison_edition','livre.type',  'genre', 'livre.ean']].groupby(['livre.maison_edition','livre.type',  'genre',]).count().sort_values('livre.ean', ascending=False).reset_index().rename(columns = { "livre.maison_edition": 'maison_edition', 'livre.type': 'type', 'livre.ean':'values'})
+		
+		#pour mon test sur la construction du graphique sankey, je réduis mon analyse sur les editeurs ayant plus de 10 ouvrages à la RL 2023
+		liste_editeur = [e for e in df_nb_livre_x_editeur_sup_dix['livre.maison_edition']]
+		#st.write(liste_editeur)
+		sankey_df = sankey_df[sankey_df['maison_edition'].isin(liste_editeur)]
+	
+		#Ici, je crée un dictionnaire permettant d'avoir un index pour les identifier les sources et les targets
+		label_sk = [*sankey_df['maison_edition'].unique(), *sankey_df['type'].unique(), *sankey_df['genre'].unique()]
+		color = ["rgba(31, 119, 180, 0.8)",
+				  "rgba(255, 127, 14, 0.8)",
+				  "rgba(44, 160, 44, 0.8)",
+				  "rgba(214, 39, 40, 0.8)",
+				  "rgba(148, 103, 189, 0.8)",
+				  "rgba(140, 86, 75, 0.8)",
+				  "rgba(227, 119, 194, 0.8)",
+				  "rgba(127, 127, 127, 0.8)",
+				  "rgba(188, 189, 34, 0.8)",
+				  "rgba(23, 190, 207, 0.8)",
+				  "rgba(31, 119, 180, 0.8)"]
+		
+		
+		dico_label_sk = dict(zip(label_sk,color))
+		df_label_sk = pd.DataFrame.from_dict(dico_label_sk, orient = 'index').reset_index().rename(columns = {'index':'maison_edition', 0:'color'}).reset_index()
+		#st.dataframe(df_label_sk)
+	
+		#pour la première partie du graph les sources sont les editeurs et les targets les types d'ouvrages. Pour déterminer les valeurs, je passe par un groupby. Pour la deuxièle partie, les sources sont les types d'ouvrages et les targets les genres. Pour les valeurs se sont le nb de livres.
+		sankey_df_graph = pd.concat([sankey_df[["maison_edition", "type", "values"]].rename(columns = {"maison_edition": "source", "type": "target"}).groupby(["source", "target"]).sum(),
+									 sankey_df[["type", 'genre', "values"]].rename(columns = {"type" : "source", "genre": "target"}).groupby(["source", "target"]).sum()]).reset_index()
 	
 		
-		with col_geo_chart :
-			st.markdown(f"**Top 10 des pays d'origine des auteurs**")
-			liste_pays = set(df_list_livre_rl['pays'])
-			dico_pays = []
-			for pays in liste_pays :
-				list_livre_rl_pays = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['pays'] == pays, dico_rl_dataviz.values()))
-				dico_pays.append([pays, len(list_livre_rl_pays)])
-	
-			df_pays = pd.DataFrame.from_dict(dico_pays).rename(columns={0:'Pays', 1:'Nb ouvrages'})
-			#st.write(df_pays)
+		sankey_df_graph.insert(1, 'index_source', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
+		sankey_df_graph.insert(3, 'index_target', sankey_df_graph['target'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
+		sankey_df_graph.insert(4, 'color', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['color'].values[0]))
 		
-			fig_top_origine_auteur = px.bar(df_pays.sort_values('Nb ouvrages', ascending = True).tail(10), x='Nb ouvrages',
-											y='Pays', orientation='h')
-			st.plotly_chart(fig_top_origine_auteur, use_container_width=True)
-	st.divider()
-
-	# Partie Editeurs
-	# Pour Sankey graph
-	if 'total_columns_rl' not in st.session_state:
-		st.session_state['total_columns_rl'] = pd.DataFrame([[x, x['livre']] for x in list(filter(lambda x: x['livre'] != {}, dico_rl_dataviz.values()))])
-		st.session_state['total_columns_rl'] = pd.concat([st.session_state['total_columns_rl'], pd.json_normalize(st.session_state['total_columns_rl'].pop(0))], axis=1).drop(columns=[1])
+		#st.dataframe(sankey_df_graph)
+		
+		# override gray link colors with 'source' colors
+		opacity = 0.4
+		
+		fig_rl = go.Figure(data=[go.Sankey(
+		node = dict(
+		pad = 15,
+		thickness = 20,
+		line = dict(color = "black", width = 0.5),
+		label = [l for l in dico_label_sk.keys()],
+		color = [c for c in df_label_sk['color']],
+		),
+		link = dict(
+		source = [s for s in sankey_df_graph.index_source], # indices correspond to labels, eg A1, A2, A1, B1, …
+		target = [t for t in sankey_df_graph.index_target],
+		value = [v for v in sankey_df_graph['values']],
+		color = [c.replace('0.8',str(opacity)) for c in sankey_df_graph['color']]	
+		))])
 	
-	#dependra du graph voulu
-	only_rl = st.session_state['total_columns_rl'][st.session_state['total_columns_rl']['livre.RL']=='RL']
-	
-	col_edi_img, col_edi_titre= st.columns([0.5,8])
-	with col_edi_img :
-		st.image('docs/icons8-livres-64.png') 
-	with col_edi_titre :
-		st.markdown("#### Editeurs")
+		fig_rl.update_layout(
+		title_text="Répartition des ouvrages de la Rentrée Littéraire 2023 par éditeur, type et genre",
+		font_family="Courier New",
+		font_color="blue",
+		font_size=12,
+		#title_font_family="Times New Roman",
+		title_font_color="white",
+		)
 
-	#dataframe Editeurs | nb d'ouvrages
-	#liste_editeur = set([x['livre']['maison_edition'] for x in dico_rl_dataviz.values() if x['livre']['RL']=='RL'])
-	#dico_editeur = []
-	#for editeur in liste_editeur :
-	#	list_livre_rl_editeur = list(filter(lambda x: x['livre']['RL'] != '' and x['livre']['ean'] != '' and x['livre']['maison_edition']==editeur,
-	#									 dico_rl_dataviz.values()))
-	#	dico_editeur.append([editeur, len(list_livre_rl_editeur)])
-	df_nb_livre_x_editeur = only_rl[['livre.maison_edition', 'livre.ean']].groupby('livre.maison_edition').count().sort_values('livre.ean', ascending=False).reset_index()
-	#df_nb_livre_x_editeur = pd.DataFrame.from_dict(dico_editeur).rename(columns={0:'editeur', 1:'Nb ouvrages'}).sort_values('Nb ouvrages', ascending=False).reset_index(drop = True)
-
-	df_nb_livre_x_editeur_sup_dix = df_nb_livre_x_editeur[df_nb_livre_x_editeur['livre.ean']>=10]
-	st.markdown(f"**Top éditeurs avec plus de 10 ouvrages parus**")
-	st.dataframe(df_nb_livre_x_editeur_sup_dix)
-
-
-	#Dataframe Sankey
-	sankey_df = only_rl[['livre.maison_edition','livre.type',  'genre', 'livre.ean']].groupby(['livre.maison_edition','livre.type',  'genre',]).count().sort_values('livre.ean', ascending=False).reset_index().rename(columns = { "livre.maison_edition": 'maison_edition', 'livre.type': 'type', 'livre.ean':'values'})
-	
-	#pour mon test sur la construction du graphique sankey, je réduis mon analyse sur les editeurs ayant plus de 10 ouvrages à la RL 2023
-	liste_editeur = [e for e in df_nb_livre_x_editeur_sup_dix['livre.maison_edition']]
-	#st.write(liste_editeur)
-	sankey_df = sankey_df[sankey_df['maison_edition'].isin(liste_editeur)]
-
-	#Ici, je crée un dictionnaire permettant d'avoir un index pour les identifier les sources et les targets
-	label_sk = [*sankey_df['maison_edition'].unique(), *sankey_df['type'].unique(), *sankey_df['genre'].unique()]
-	color = ["rgba(31, 119, 180, 0.8)",
-              "rgba(255, 127, 14, 0.8)",
-              "rgba(44, 160, 44, 0.8)",
-              "rgba(214, 39, 40, 0.8)",
-              "rgba(148, 103, 189, 0.8)",
-              "rgba(140, 86, 75, 0.8)",
-              "rgba(227, 119, 194, 0.8)",
-              "rgba(127, 127, 127, 0.8)",
-              "rgba(188, 189, 34, 0.8)",
-              "rgba(23, 190, 207, 0.8)",
-              "rgba(31, 119, 180, 0.8)"]
-	
-	
-	dico_label_sk = dict(zip(label_sk,color))
-	df_label_sk = pd.DataFrame.from_dict(dico_label_sk, orient = 'index').reset_index().rename(columns = {'index':'maison_edition', 0:'color'}).reset_index()
-	#st.dataframe(df_label_sk)
-
-	#pour la première partie du graph les sources sont les editeurs et les targets les types d'ouvrages. Pour déterminer les valeurs, je passe par un groupby. Pour la deuxièle partie, les sources sont les types d'ouvrages et les targets les genres. Pour les valeurs se sont le nb de livres.
-	sankey_df_graph = pd.concat([sankey_df[["maison_edition", "type", "values"]].rename(columns = {"maison_edition": "source", "type": "target"}).groupby(["source", "target"]).sum(),
-								 sankey_df[["type", 'genre', "values"]].rename(columns = {"type" : "source", "genre": "target"}).groupby(["source", "target"]).sum()]).reset_index()
-
-	
-	sankey_df_graph.insert(1, 'index_source', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
-	sankey_df_graph.insert(3, 'index_target', sankey_df_graph['target'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['index'].values[0]))
-	sankey_df_graph.insert(4, 'color', sankey_df_graph['source'].apply(lambda x: df_label_sk[df_label_sk['maison_edition']==x]['color'].values[0]))
-	
-	#st.dataframe(sankey_df_graph)
-	
-	# override gray link colors with 'source' colors
-	opacity = 0.4
-	
-	fig_rl = go.Figure(data=[go.Sankey(
-	node = dict(
-	pad = 15,
-	thickness = 20,
-	line = dict(color = "black", width = 0.5),
-	label = [l for l in dico_label_sk.keys()],
-	color = [c for c in df_label_sk['color']],
-	),
-	link = dict(
-	source = [s for s in sankey_df_graph.index_source], # indices correspond to labels, eg A1, A2, A1, B1, …
-	target = [t for t in sankey_df_graph.index_target],
-	value = [v for v in sankey_df_graph['values']],
-	color = [c.replace('0.8',str(opacity)) for c in sankey_df_graph['color']]	
-	))])
-
-	fig_rl.update_layout(
-	title_text="Répartition des ouvrages de la Rentrée Littéraire 2023 par éditeur, type et genre",
-	font_family="Courier New",
-	font_color="blue",
-	font_size=12,
-	title_font_family="Times New Roman",
-	title_font_color="red",
-	)
-	st.write(fig_rl)
+		#st.markdown(f"**Répartition des ouvrages de la Rentrée Littéraire 2023 par éditeur, type et genre**")
+		with st.container(border=True): 
+			st.plotly_chart(fig_rl, use_container_width=True)
 
 	
 ##### Pays d'origine des auteurs
