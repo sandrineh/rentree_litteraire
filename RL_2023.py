@@ -16,12 +16,15 @@ from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
 import os
+import sys
 
 import time
 
+#Datavisualisation
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
+import matplotlib.pyplot as plt
 
 import streamlit as st
 from streamlit_option_menu import option_menu
@@ -338,7 +341,7 @@ with cont_tab :
 		#									 dico_rl_dataviz.values()))
 		#	dico_editeur.append([editeur, len(list_livre_rl_editeur)])
 
-		col_top_edi, col_edi_couv = st.columns([3,5])
+		col_top_edi, col_edi_couv, col_titre_livre = st.columns([3,3,4])
 
 		with col_top_edi : 
 			df_nb_livre_x_editeur = only_rl[['livre.maison_edition', 'livre.ean']].groupby('livre.maison_edition').count().sort_values('livre.ean', ascending=False).reset_index()
@@ -355,19 +358,8 @@ with cont_tab :
 			df_couv_livre = df_couv_livre[['Auteur', 'Livre', 'maison_edition', 'RL', 'couverture']]
 			df_couv_livre['couverture'] = df_couv_livre['couverture'].apply(lambda i : re.sub("\s+(\d\D)", "", i.split(',')[1])
 															 if len(i.split(',')) > 1 else re.sub("\s+(\d\D)", "", i))
-			
-			# Pour afficher la couverture de l'ouvrage plutôt que l'url dans la colonne "couverture"
-			#st.data_editor(
-			#    df_couv_livre,
-			#    column_config={
-			#        "couverture": st.column_config.ImageColumn(
-			#            "couverture", help="Streamlit app preview screenshots"
-			#        )
-			#    },
-			#    hide_index=True,
-			#)
-
-
+			df_couv_livre['Livre'] = df_couv_livre['Livre'].apply(lambda i : re.sub("- Grand Format|- Poche", "", str(i)))
+		
 		# --------------- DEBUT CHOIX IMAGE + COMPUTER VISION
 			#"""
 			#	L'idée est ici de créer une vue de visuels de couvertures de livres alignés
@@ -379,7 +371,6 @@ with cont_tab :
 			container_couv = st.container()
 			
 			with container_couv:
-				
 				#container_choix_image = st.container()
 				
 				def load_images():
@@ -433,6 +424,25 @@ with cont_tab :
 						cols[i].image(image_file, use_column_width=True)
 			# --------------- FIN CHOIX IMAGE + COMPUTER VISION
 		
+		with col_titre_livre :
+			st.markdown(f"**Nuage de mots**")
+			from nuagemot import create_wordcloud
+
+			topic = ' '.join(view_titres_livres)
+		
+			wordcloud = create_wordcloud(topic)
+		
+			# Display the generated image:
+			def couleur(*args, **kwargs):
+			    import random
+			    return "rgb(0, 100, {})".format(random.randint(100, 255))
+			    
+			
+			fig, ax = plt.subplots(figsize = (12, 8))
+			ax.imshow(wordcloud.recolor(color_func = couleur), )
+			plt.axis("off")
+			st.pyplot(fig)
+
 		
 		#Dataframe pour la creation du graph de type Sankey
 		sankey_df = only_rl[['livre.maison_edition','livre.type',  'genre', 'livre.ean']].groupby(['livre.maison_edition','livre.type',  'genre',]).count().sort_values('livre.ean', ascending=False).reset_index().rename(columns = { "livre.maison_edition": 'maison_edition', 'livre.type': 'type', 'livre.ean':'values'})
@@ -502,6 +512,24 @@ with cont_tab :
 		#st.markdown(f"**Répartition des ouvrages de la Rentrée Littéraire 2023 par éditeur, type et genre**")
 		with st.container(border=True): 
 			st.plotly_chart(fig_rl, use_container_width=True)
+
+
+	##### IDEE
+	#choisir les maisons d'édition et voir le graph sankaey s'adapter en fonction 
+	#sinon affiche par défaut le sankey des editeurs qui ont sorti au moins 10 ouvrages
+
+	
+	st.markdown("#### Liste des ouvrages")
+	# Pour afficher la couverture de l'ouvrage plutôt que l'url dans la colonne "couverture"
+	st.data_editor(
+	    df_couv_livre,
+	    column_config={
+	        "couverture": st.column_config.ImageColumn(
+	            "couverture", help="Streamlit app preview screenshots"
+	        )
+	    },
+	    hide_index=True,
+	)
 
 	
 ##### Pays d'origine des auteurs
