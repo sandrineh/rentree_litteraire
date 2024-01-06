@@ -67,19 +67,19 @@ if 'caract_livre' not in st.session_state:
 	st.session_state['caract_livre'] = st.session_state['caract_livre'].loc[st.session_state['caract_livre']['RL'] =='RL']
 
 # Pour creéation dataframe prix littéraire
-if 'select_prix_liit' not in st.session_state:
-	st.session_state['select_prix_liit'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],y] for x in list(filter(lambda x: x['livre']['prix_litteraire'] != {}, dico_rl_dataviz.values())) for y in x['livre']['prix_litteraire'].values() ], columns = ['Auteur','Livre','maison_edition','prix'])
-	st.session_state['select_prix_liit'] = pd.concat([st.session_state['select_prix_liit'], pd.json_normalize(st.session_state['select_prix_liit'].pop("prix"))], axis=1)
+if 'df_prix_liit' not in st.session_state:
+	st.session_state['df_prix_liit'] = pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],x['livre']['autres_infos'],y] for x in list(filter(lambda x: x['livre']['prix_litteraire'] != {}, dico_rl_dataviz.values())) for y in x['livre']['prix_litteraire'].values() ], columns = ['Auteur','Livre','maison_edition','couv','prix'])
+	#pd.DataFrame([[x['nom_complet'], x['livre']['titre'], x['livre']['maison_edition'],y] for x in list(filter(lambda x: x['livre']['prix_litteraire'] != {}, dico_rl_dataviz.values())) for y in x['livre']['prix_litteraire'].values() ], columns = ['Auteur','Livre','maison_edition','prix'])
+	st.session_state['df_prix_liit'] = pd.concat([st.session_state['df_prix_liit'], pd.json_normalize(st.session_state['df_prix_liit'].pop("prix"))], axis=1)
+	st.session_state['df_prix_liit'] = pd.concat([st.session_state['df_prix_liit'], pd.json_normalize(st.session_state['df_prix_liit'].pop("couv"))], axis=1)
 
 # Données Romans français
 if 'roman_francais' not in st.session_state:
 	st.session_state['roman_francais'] = ''
 
-
 # Données Romans français
 if 'roman_etranger' not in st.session_state:
 	st.session_state['roman_etranger'] = ''
-
 
 # Données Essais
 if 'essais' not in st.session_state:
@@ -91,7 +91,7 @@ if 'couv_livre' not in st.session_state:
 
 	
 ### A. Sidebar
-
+#x['livre']['autres_infos']] for x in list(filter(lambda x: x['livre']['autres_infos'] != {}, dico_rl_dataviz.values()))
 #with st.sidebar:
 	#st.success("Select an add method.")
 	#st.title('RENTRÉE LITTÉRAIRE & PRIX LITTÉRAIRES')
@@ -154,6 +154,7 @@ cont_prix_litt = st.container()
 
 #je transforme le dictionnaire en dataframe
 df_rl_dataviz_pl = pd.DataFrame.from_dict(dico_rl_dataviz, orient='index')
+st.session_state['df_rl_dataviz_pl']  = df_rl_dataviz_pl
 
 #l'idée est de filtrer sur les ouvrages identifié comme ouvrage de la rentrée littéraire
 # Filtre => unique les livres RL
@@ -185,25 +186,24 @@ if selected == "Rentrée Littéraire":
 			InfoRentreeLitt.do_info_editeur()
 		with st.container(border = True):
 			InfoRentreeLitt.do_info_ouvrage()
-	#    get_credit_metadata()
-	#    affiches_films_semaine()
-	#    credit_repart_genre_week()
-	#    data_film_selected()
+			
 	elif selected_info == "Géographie":
 	    InfoRentreeLittGeo.do_info_geo()
-	#elif selected_info == "Test Bechdel":
-	#    do_bechdel()
-	#elif selected_info == "Datasets":
-	#    to_datasets()
+		
 	else :
 	    st.empty()
 
 # C. Prix litt
 if selected == "Prix Littéraire":
+	st.header('Analyse prix Littéraire')
 	from page_prix_litteraire import *
-	InfoPrixLitt.get_data(df_list_livre_rl,dico_rl_dataviz)
-	with st.container(border = True): 
-			InfoPrixLitt.intro_form()
+	analysePrixLitt.sidebar_choix_prix()
+	with st.container(border = True):
+		analysePrixLitt.info_laureat()
+	with st.container(border = True):
+		analysePrixLitt.info_choix_prix()
+	with st.container(border = True):
+		analysePrixLitt.info_course()
 
 #with cont_metric :
 #	rl_title, rl_espce_vide, rl_metric = st.columns([2,1,5])
