@@ -195,15 +195,32 @@ if selected == "Rentrée Littéraire":
 
 # C. Prix litt
 if selected == "Prix Littéraire":
-	st.header('Analyse prix Littéraire')
+	st.header('Prix Littéraires 2023')
+	
 	from page_prix_litteraire import *
+	# C.1. afficher la sidebar 
 	analysePrixLitt.sidebar_choix_prix()
+
+	# C.2. afficher le menu horizontal 
 	with st.container(border = True):
-		analysePrixLitt.info_laureat()
-	with st.container(border = True):
-		analysePrixLitt.info_choix_prix()
-	with st.container(border = True):
-		analysePrixLitt.info_course()
+		selected_prix = analysePrixLitt.menu_horizontal()
+
+	# C.3. afficher le contenu suivant le choix du menu horizontal
+	if selected_prix == "Lauréats 2023":
+		with st.container(border = True):
+			analysePrixLitt.info_laureat()
+			
+	elif selected_prix == "Prix Littéraire":
+		with st.container(border = True):
+			analysePrixLitt.info_choix_prix()
+		#with st.container(border = True):
+			#analysePrixLitt.info_choix_prix.info_course()
+		
+	else :
+	    st.empty()
+		
+	
+	
 
 #with cont_metric :
 #	rl_title, rl_espce_vide, rl_metric = st.columns([2,1,5])
