@@ -36,7 +36,7 @@ import pickle
 
 
 # 3.Setup de l'application Streamlit  - Streamlit webpage properties / set up the app with wide view preset and a title
-st.set_page_config(page_title="Rentree Litteraire", page_icon="books", layout="wide")
+#st.set_page_config(page_title="Rentree Litteraire", page_icon="books", layout="wide")
 
 st.write("RL_2023 GO")
 
@@ -120,20 +120,25 @@ with cont_1:
 		st.write(len(df_couv_livre))
 
 
-data_df = df_couv_livre.head(10)
-data_df['couverture'] = data_df['couverture'].apply(lambda i : re.sub("\s+(\d\D)", "", i.split(',')[1])
-													 if len(i.split(',')) > 1 else re.sub("\s+(\d\D)", "", i))
-
-st.data_editor(
-    data_df,
-    column_config={
-        "couverture": st.column_config.ImageColumn(
-            "couverture", help="Streamlit app preview screenshots"
-        )
-    },
-    hide_index=True,
-)
-
+def deftext():
+	st.write('olala')
+	
+def testImport():
+	data_df = df_couv_livre[['Auteur','Livre','maison_edition','RL','couverture']]
+	#data_df = data_df
+	data_df['couverture'] = data_df['couverture'].apply(lambda i : re.sub("\s+(\d\D)", "", i.split(',')[1])
+														 if len(i.split(',')) > 1 else re.sub("\s+(\d\D)", "", i))
+	
+	st.data_editor(
+	    data_df,
+	    column_config={
+	        "couverture": st.column_config.ImageColumn(
+	            "couverture", help="Streamlit app preview screenshots"
+	        )
+	    },
+	    hide_index=True,
+	)
+	
 # --------------- DEBUT CHOIX IMAGE + COMPUTER VISION
 """
 	L'idée est ici de créer une vue de visuels de couvertures de livres alignés
@@ -144,57 +149,57 @@ st.data_editor(
 	
 container_cv = st.container()
 
-with container_cv:
-	st.write('pour affichage des couvertures de livres')
-	
-	container_choix_image = st.container()
-	#all_images = st.checkbox("Select one or more images(s)")
-	
-	def load_images():
-		titres_livres = []
-		image_files = []
-		for i,b in zip(data_df['couverture'],data_df['Livre']):
-			if len(i.split(',')) > 1:
-				i_replace = i.split(',')[1]
-			else :
-				i_replace = i
-			image_link = re.sub("\s+(\d\D)", "", i_replace)
-			image_files.append(image_link)
-
-			part = image_link.replace('.webp','').split('/')
-			if b not in titres_livres :
-				titres_livres.append(b)
-			
-			#st.markdown(f"""![Foo]({image_link})""")
-			#st.write(re.sub("\s+(\d\D)", "", i_replace))
-			
-		return image_files, titres_livres
-		
-	image_files, titres_livres = load_images()
-
-	#st.write(image_files, titres_livres)
-	
-	#if all_images:
-	#	view_titres_livres = container_choix_image.multiselect("Select one or more options:", image_files,image_files)
-	#else:
-	#	view_titres_livres =  container_choix_image.multiselect("Select one or more options:", image_files)
-		
-	view_titres_livres = st.multiselect("select image(s)", titres_livres, titres_livres)
-	
-	n = st.number_input("select images grid", 1,7,5)
-	
-	view_images = []
-	# Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
-	for image_file, titre_livre in zip(image_files, titres_livres) :
-		if titre_livre in view_titres_livres:
-			view_images.append(image_file)
-	
-	groups = []
-	for i in range(0, len(view_images), n):
-		groups.append(view_images[i:i+n])
-		
-	for group in groups:
-		cols = st.columns(n)
-		for i, image_file in enumerate(group):
-			cols[i].image(image_file, use_column_width=True)
-# --------------- FIN CHOIX IMAGE + COMPUTER VISION
+#with container_cv:
+#	st.write('pour affichage des couvertures de livres')
+#	
+#	container_choix_image = st.container()
+#	#all_images = st.checkbox("Select one or more images(s)")
+#	
+#	def load_images():
+#		titres_livres = []
+#		image_files = []
+#		for i,b in zip(data_df['couverture'],data_df['Livre']):
+#			if len(i.split(',')) > 1:
+#				i_replace = i.split(',')[1]
+#			else :
+#				i_replace = i
+#			image_link = re.sub("\s+(\d\D)", "", i_replace)
+#			image_files.append(image_link)
+#
+#			part = image_link.replace('.webp','').split('/')
+#			if b not in titres_livres :
+#				titres_livres.append(b)
+#			
+#			#st.markdown(f"""![Foo]({image_link})""")
+#			#st.write(re.sub("\s+(\d\D)", "", i_replace))
+#			
+#		return image_files, titres_livres
+#		
+#	image_files, titres_livres = load_images()
+#
+#	#st.write(image_files, titres_livres)
+#	
+#	#if all_images:
+#	#	view_titres_livres = container_choix_image.multiselect("Select one or more options:", image_files,image_files)
+#	#else:
+#	#	view_titres_livres =  container_choix_image.multiselect("Select one or more options:", image_files)
+#		
+#	view_titres_livres = st.multiselect("select image(s)", titres_livres, titres_livres)
+#	
+#	n = st.number_input("select images grid", 1,7,5)
+#	
+#	view_images = []
+#	# Si je retrouve le titre de la selection dans la liste totale alors j'affiche l'image correspondante
+#	for image_file, titre_livre in zip(image_files, titres_livres) :
+#		if titre_livre in view_titres_livres:
+#			view_images.append(image_file)
+#	
+#	groups = []
+#	for i in range(0, len(view_images), n):
+#		groups.append(view_images[i:i+n])
+#		
+#	for group in groups:
+#		cols = st.columns(n)
+#		for i, image_file in enumerate(group):
+#			cols[i].image(image_file, use_column_width=True)
+## --------------- FIN CHOIX IMAGE + COMPUTER VISION

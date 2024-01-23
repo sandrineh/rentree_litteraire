@@ -130,9 +130,9 @@ class InfoRentreeLitt():
 		
 			df_type_rent_litt = pd.DataFrame.from_dict(dico_rent_litt).rename(columns={0:'Type', 1:'Nb ouvrages'})
 			
-			st.session_state['roman_francais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans français']['Nb ouvrages'].values[0]
-			st.session_state['roman_etranger'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans étrangers']['Nb ouvrages'].values[0]
-			st.session_state['essais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Essais']['Nb ouvrages'].values[0]
+			st.session_state['roman_francais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans français']['Nb ouvrages'].sum()
+			st.session_state['roman_etranger'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans étrangers']['Nb ouvrages'].sum()
+			st.session_state['essais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Essais']['Nb ouvrages'].sum()
 
 			st.write(f"Parmi les ouvrages parus, **:blue[{int(round(st.session_state['roman_francais']/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger']/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais']/len(liste_ean)*100,0))}%]** des essais.")
 			

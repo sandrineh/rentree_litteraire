@@ -178,7 +178,7 @@ if selected == "Rentrée Littéraire":
 	# J'affiche le menu pour la annalyses spécifiques : générale, zone géographiques, par genre, pour les premiers romans
 	selected_info = InfoRentreeLitt.menu_horizontal()
 
-	# B. afficher le menu d'analyse de film 
+	# B. afficher les infos globales
 	if selected_info == "Informations":
 		with st.container(border = True): 
 			InfoRentreeLitt.do_info_rl()
@@ -189,6 +189,11 @@ if selected == "Rentrée Littéraire":
 			
 	elif selected_info == "Géographie":
 	    InfoRentreeLittGeo.do_info_geo()
+		
+	elif selected_info == "Genre":
+		from page_rentree_litteraire_genre import *
+		with st.container(border = True): 
+			InfoRentreeLittGenre.do_info_rl_genre()
 		
 	else :
 	    st.empty()
