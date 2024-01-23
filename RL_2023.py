@@ -1,7 +1,7 @@
 
 # 1.Importation des librairies nécessaires pour le script
 from urllib.request import Request, urlopen
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 #import scrapy
 import re
 import requests
