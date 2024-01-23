@@ -20,7 +20,7 @@ import sys
 import time
 
 #Datavisualisation
-from plotly.subplots import make_subplots
+#from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
