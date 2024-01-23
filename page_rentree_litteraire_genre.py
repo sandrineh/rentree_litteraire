@@ -10,7 +10,7 @@ import random
 
 #Datavisualisation
 import altair as alt
-from plotly.subplots import make_subplots
+#from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ import time
 import re
 
 import json
-from pandas.io.json import json_normalize
+#from pandas.io.json import json_normalize
 
 #Export fichier
 import pickle
