@@ -111,6 +111,7 @@ class sidebar():
                 st.markdown(f'<div><h1 style="background-color:#E3879E;color:#000;height:150px;justify-content:center;align-items:center;margin-bottom:20px;text-align:center;border-radius:6px;font-size:30px;">{projet}</br><p style="font-size:20px;padding-top:10px; color:#363535">{sous_projet}</p></div>',unsafe_allow_html=True)
 				#(palette : 80A1C1 air superiority blue - 6F2DBD Grape - 3B413C Black olive - FFA400 Orange (web) - E3879E Rose pompadour)
             header("RENTRÉE LITTÉRAIRE & PRIX LITTÉRAIRES","2023")
+			
 
             # 6.2 Ajout de 2 menus déroulants qui permettent d'avoir des infos sur le projet et l'application
             # --------------- Add two expanders to provide additional information about this e-tutorial and the app
