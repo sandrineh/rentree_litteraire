@@ -50,8 +50,8 @@ spacy-legacy==3.0.12 ; python_version >= "3.10" and python_version < "4.0"
 spacy-loggers==1.0.5 ; python_version >= "3.10" and python_version < "4.0"
 spacy==3.7.2 ; python_version >= "3.10" and python_version < "4.0"
 srsly==2.4.8 ; python_version >= "3.10" and python_version < "4.0"
-streamlit==1.29.0 ; python_version >= "3.10" and python_version < "4.0"
-streamlit_option_menu==0.3.6 ; python_version >= "3.10" and python_version < "4.0"
+streamlit==1.29.0
+streamlit_option_menu==0.3.6
 tenacity==8.2.3 ; python_version >= "3.10" and python_version < "4.0"
 textblob==0.17.1 ; python_version >= "3.10" and python_version < "4.0"
 thinc==8.2.2 ; python_version >= "3.10" and python_version < "4.0"
