@@ -1,4 +1,3 @@
-
 # 1.Importation des librairies nécessaires pour le script
 from urllib.request import Request, urlopen
 #from bs4 import BeautifulSoup
@@ -7,7 +6,7 @@ import re
 import requests
 
 import json
-from pandas.io.json import json_normalize
+#from pandas.io.json import json_normalize
 
 import pandas as pd
 import numpy as np
