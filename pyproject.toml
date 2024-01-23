@@ -14,7 +14,6 @@ altair = "^5.1.2"
 wordcloud = "^1.9.3"
 textblob = "^0.17.1"
 spacy = "^3.7.2"
-streamlit-option-menu = "^0.3.12"
 
 
 [build-system]
