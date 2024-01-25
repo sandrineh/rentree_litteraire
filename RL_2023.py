@@ -117,7 +117,7 @@ class sidebar():
             # --------------- Add two expanders to provide additional information about this e-tutorial and the app
             with st.expander("Le projet"):
                 url="https://dataforgood.fr/projects/bechdelai"
-                st.image('docs/pile_book.jpg', width=50) #use_column_width=True, https://dataforgoodfr.github.io/img/logo-dfg-new2.png, https://dataforgood.fr/img/logo-dfg-new2.png
+                st.image('https://dataforgoodfr.github.io/img/logo-dfg-new2.png', width=50) #use_column_width=True, https://dataforgoodfr.github.io/img/logo-dfg-new2.png, https://dataforgood.fr/img/logo-dfg-new2.png
                 st.write("""Mesure et automatisation du test de Bechdel, de la (sous)représentation féminine 
                     et des inégalités de représentation dans le cinéma et l'audiovisuel """)
                 st.markdown(f'<a href={url} style="text-decoration:none;color:#000">En savoir plus</a>', unsafe_allow_html=True)
