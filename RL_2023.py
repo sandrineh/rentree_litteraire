@@ -23,7 +23,7 @@ import time
 #from plotly.subplots import make_subplots
 #import plotly.graph_objects as go
 #import plotly.express as px
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import streamlit as st
 from streamlit_option_menu import option_menu
