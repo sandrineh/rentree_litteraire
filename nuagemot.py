@@ -39,9 +39,9 @@ import pickle
 #Text Analysis
 from wordcloud import WordCloud
 #from textblob import TextBlob
-import spacy
+#import spacy
 
-from PIL import Image
+#from PIL import Image
 #from collections import defaultdict
 #from collections import Counter
 #from sklearn.feature_extraction.text import CountVectorizer
