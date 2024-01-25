@@ -38,7 +38,7 @@ import pickle
 
 #Text Analysis
 from wordcloud import WordCloud
-from textblob import TextBlob
+#from textblob import TextBlob
 import spacy
 
 from PIL import Image
