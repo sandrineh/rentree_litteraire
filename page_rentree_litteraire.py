@@ -1,4 +1,4 @@
-# 1.Importation des librairies nécessaires pour le script
+# O.Importation des librairies nécessaires pour le script
 #Core Pkgs - Web application
 import streamlit as st
 from streamlit_option_menu import option_menu
@@ -10,7 +10,6 @@ import random
 
 #Datavisualisation
 import altair as alt
-#from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
@@ -18,15 +17,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-#from collections import Counter
-#from sklearn.cluster import KMeans
-#import cv2
-
 import time
 import re
 
 import json
-#from pandas.io.json import json_normalize
 
 #Export fichier
 import pickle

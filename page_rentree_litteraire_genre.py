@@ -10,7 +10,6 @@ import random
 
 #Datavisualisation
 import altair as alt
-#from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
@@ -18,15 +17,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-#from collections import Counter
-#from sklearn.cluster import KMeans
-#import cv2
-
 import time
 import re
 
 import json
-#from pandas.io.json import json_normalize
 
 #Export fichier
 import pickle
@@ -43,6 +37,16 @@ if 'liste_ouvrage' not in st.session_state:
 	st.session_state['liste_ouvrage'] = ''
 
 # 1. Classe lancée si choix de "rentrée littéraire" dans le menu en sidebar
+def graph_genre(genre):
+	fig_type=px.bar(df_type_rent_litt[df_type_rent_litt['Genre']==genre].sort_values('Nb ouvrages', ascending = True), x='Nb ouvrages',y='Type', orientation='h', text_auto=True)
+	fig_type.update_traces(textfont_size=16, textangle=0, textposition="inside", 
+										   cliponaxis=False, insidetextfont_color='black')
+	fig_type.update_xaxes(showgrid=False,tickfont=dict(size=14), showticklabels=False)
+	fig_type.update_yaxes(showgrid=False,tickfont=dict(size=14))
+	fig_type.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_title=None, yaxis_title=None)
+	return fig_type
+	
+
 class InfoRentreeLittGenre():
 	def do_info_rl_genre():
 		liste_ean = st.session_state['liste_ean']
@@ -68,9 +72,17 @@ class InfoRentreeLittGenre():
 			st.session_state['roman_francais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans français']#['Nb ouvrages'].sum()
 			st.session_state['roman_etranger'] = df_type_rent_litt[df_type_rent_litt['Type']=='Romans étrangers']#['Nb ouvrages'].sum()
 			st.session_state['essais'] = df_type_rent_litt[df_type_rent_litt['Type']=='Essais']#['Nb ouvrages'].sum()
+	
 
-			
-
+			# Création du barchart horizontal
+			def graph_genre(genre):
+				fig_type=px.bar(df_type_rent_litt[df_type_rent_litt['Genre']==genre].sort_values('Nb ouvrages', ascending = True), x='Nb ouvrages',y='Type', orientation='h', text_auto=True)
+				fig_type.update_traces(textfont_size=16, textangle=0, textposition="inside", 
+													   cliponaxis=False, insidetextfont_color='black')
+				fig_type.update_xaxes(showgrid=False,tickfont=dict(size=14), showticklabels=False)
+				fig_type.update_yaxes(showgrid=False,tickfont=dict(size=14))
+				fig_type.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_title=None, yaxis_title=None)
+				return fig_type
 			# Choix du niveau de sélection
 			selection = st.radio(
 				"Consulter la liste des ouvrages de la ",
@@ -80,25 +92,65 @@ class InfoRentreeLittGenre():
 			
 			if selection == "F":
 				st.write('Female')
+					
 				st.write(f"Parmi les ouvrages parus et écrits par des autrices, **:blue[{int(round(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger'][st.session_state['roman_etranger']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais'][st.session_state['essais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
-				st.write(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum())
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
+					#fig_type=px.bar(df_type_rent_litt[df_type_rent_litt['Genre']==selection].sort_values('Nb ouvrages', ascending = True), x='Nb ouvrages',y='Type', orientation='h', text_auto=True)
+					#fig_type.update_traces(textfont_size=16, textangle=0, textposition="inside", 
+										   #cliponaxis=False, insidetextfont_color='black')
+					#fig_type.update_xaxes(showgrid=False,tickfont=dict(size=14), showticklabels=False)
+					#fig_type.update_yaxes(showgrid=False,tickfont=dict(size=14))
+					#fig_type.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_title=None, yaxis_title=None)
+			
+					#st.plotly_chart(fig_type, use_container_width=True)
+				
 			elif selection == "M":
 				st.write("Male")
-				st.write(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum())
+				st.write(f"Parmi les ouvrages parus et écrits par des auteurs, **:blue[{int(round(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger'][st.session_state['roman_etranger']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais'][st.session_state['essais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
+
+			elif selection == "MIXTE":
+				st.write("Mixte")
+				st.write(f"Parmi les ouvrages parus et écrits par des auteurs, **:blue[{int(round(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger'][st.session_state['roman_etranger']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais'][st.session_state['essais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
+
+			elif selection == "NB":
+				st.write("Non binaire")
+				st.write(f"Parmi les ouvrages parus, **:blue[{int(round(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger'][st.session_state['roman_etranger']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais'][st.session_state['essais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
+
+			elif selection == "NC":
+				st.write("Non communiqué")
+				st.write(f"Parmi les ouvrages parus, **:blue[{int(round(st.session_state['roman_francais'][st.session_state['roman_francais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger'][st.session_state['roman_etranger']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais'][st.session_state['essais']['Genre']==selection]['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
+					
 			else:
 				st.write(f"Parmi les ouvrages parus, **:blue[{int(round(st.session_state['roman_francais']['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** sont des romans français, **:blue[{int(round(st.session_state['roman_etranger']['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des romans étrangers et **:blue[{int(round(st.session_state['essais']['Nb ouvrages'].sum()/len(liste_ean)*100,0))}%]** des essais.")
+
+				with st.container():
+					st.plotly_chart(graph_genre(selection), use_container_width=True)
 			
 			# Création du barchart horizontal
-			with st.container():
-				fig_type=px.bar(df_type_rent_litt.sort_values('Nb ouvrages', ascending = True), x='Nb ouvrages',y='Type', orientation='h',
-							   color = 'Genre', text_auto=True)
-				fig_type.update_traces(textfont_size=16, textangle=0, textposition="inside", 
-									   cliponaxis=False, insidetextfont_color='black')
-				fig_type.update_xaxes(showgrid=False,tickfont=dict(size=14), showticklabels=False)
-				fig_type.update_yaxes(showgrid=False,tickfont=dict(size=14))
-				fig_type.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_title=None, yaxis_title=None)
+			#with st.container():
+			#	fig_type=px.bar(df_type_rent_litt.sort_values('Nb ouvrages', ascending = True), x='Nb ouvrages',y='Type', orientation='h',
+			#				   color = 'Genre', text_auto=True)
+			#	fig_type.update_traces(textfont_size=16, textangle=0, textposition="inside", 
+			#						   cliponaxis=False, insidetextfont_color='black')
+			#	fig_type.update_xaxes(showgrid=False,tickfont=dict(size=14), showticklabels=False)
+			#	fig_type.update_yaxes(showgrid=False,tickfont=dict(size=14))
+			#	fig_type.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_title=None, yaxis_title=None)
 		
-				st.plotly_chart(fig_type, use_container_width=True)
+			#	st.plotly_chart(fig_type, use_container_width=True)
 			
 		with col_text_rl:
 			df_caract_livre = st.session_state['caract_livre']
