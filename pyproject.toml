@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "poetry-rl"
 version = "0.1.0"
-description = ""
+description = "Application d'analyse et de visualisation des données de la rentrée littéraire."
 authors = ["Sandrine <eleonore.henry@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 packages = [{include = "poetry_rl"}]
 
@@ -14,7 +15,6 @@ altair = "^5.1.2"
 wordcloud = "^1.9.3"
 textblob = "^0.17.1"
 spacy = "^3.7.2"
-
 
 [build-system]
 requires = ["poetry-core"]
